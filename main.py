@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from datasets import PairedDataset, make_dataset
 from loss import sw_loss
 from nets import MLPRelu
+from plot import plot_model_results
 from train import train_model
 
 
@@ -184,6 +185,15 @@ def main():
         num_epochs=args.epochs,
         log_interval=args.log_interval,
         save_dir=args.save_dir,
+    )
+
+    plot_model_results(
+        model,
+        source_dataset,
+        target_dataset,
+        device,
+        title="Distribution Comparison",
+        filename=f"{args.save_dir}/results_{args.source_dataset}_to_{args.target_dataset}_{args.dimension}d.png",
     )
 
 
