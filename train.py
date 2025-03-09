@@ -28,13 +28,7 @@ def train_one_epoch(
     running_loss = 0.0
     batch_losses = []
 
-    progress_bar = tqdm(
-        enumerate(train_loader),
-        total=len(train_loader),
-        desc=f"Epoch {epoch}",
-        leave=False,
-    )
-    for batch_idx, (inputs, targets) in progress_bar:
+    for batch_idx, (inputs, targets) in enumerate(train_loader):
         inputs, targets = inputs.to(device), targets.to(device)
 
         optimizer.zero_grad()
@@ -45,9 +39,6 @@ def train_one_epoch(
 
         running_loss += loss.item()
         batch_losses.append(loss.item())
-
-        if batch_idx % log_interval == 0:
-            progress_bar.set_postfix(loss=f"{loss.item():.4f}")
 
     avg_loss = running_loss / len(train_loader)
     return avg_loss, batch_losses
@@ -70,7 +61,7 @@ def evaluate(model, valid_loader, criterion, device):
     running_loss = 0.0
 
     with torch.no_grad():
-        for inputs, targets in tqdm(valid_loader, desc="Validation", leave=False):
+        for inputs, targets in valid_loader:
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = model(inputs)
             loss = criterion(outputs, targets)
@@ -90,7 +81,7 @@ def train_model(
     num_epochs=50,
     log_interval=10,
     save_dir="checkpoints",
-    save_model=False
+    save_model=False,
 ):
     """
     Trains the model for a given number of epochs, evaluates on a validation set,
@@ -115,7 +106,7 @@ def train_model(
 
     history = {"train_loss": [], "valid_loss": []}
     best_valid_loss = float("inf")
-
+    pbar = tqdm(total=num_epochs, desc="Training")
     for epoch in range(1, num_epochs + 1):
         train_loss, _ = train_one_epoch(
             model, train_loader, criterion, optimizer, device, epoch, log_interval
@@ -125,8 +116,8 @@ def train_model(
         history["train_loss"].append(train_loss)
         history["valid_loss"].append(valid_loss)
 
-        print(
-            f"Epoch {epoch}/{num_epochs} - Train Loss: {train_loss:.4f} - Valid Loss: {valid_loss:.4f}"
+        pbar.set_description(
+            f"Train Loss: {train_loss:.4f} - Valid Loss: {valid_loss:.4f}"
         )
         if save_model:
             if valid_loss < best_valid_loss:
@@ -136,6 +127,8 @@ def train_model(
                 torch.save(model.state_dict(), checkpoint_path)
                 print(f"Saved best model checkpoint to {checkpoint_path}")
 
+        pbar.update(1)
+    pbar.close()
     history_path = os.path.join(save_dir, "training_history.json")
     with open(history_path, "w") as f:
         json.dump(history, f, indent=4)
