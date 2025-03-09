@@ -1,7 +1,7 @@
-import torch
-from torch.utils.data import Dataset
 import numpy as np
+import torch
 from sklearn.datasets import make_moons, make_swiss_roll
+from torch.utils.data import Dataset
 
 
 class TwoMoonsDataset(Dataset):
@@ -120,3 +120,18 @@ def make_dataset(name, num_samples=1000, **kwargs):
         return GaussianDataset(num_samples, mu, sigma, dim)
     else:
         raise ValueError(f"Unknown dataset name: {name}")
+
+
+class PairedDataset(torch.utils.data.Dataset):
+    def __init__(self, source_dataset, target_dataset):
+        assert len(source_dataset) == len(
+            target_dataset
+        ), "Source and target datasets must have the same number of points"
+        self.source_dataset = source_dataset
+        self.target_dataset = target_dataset
+
+    def __len__(self):
+        return len(self.source_dataset)
+
+    def __getitem__(self, idx):
+        return self.source_dataset[idx], self.target_dataset[idx]
