@@ -101,6 +101,12 @@ def parse_args():
         default="checkpoints",
         help="Directory to save model checkpoints and training history.",
     )
+    parser.add_argument(
+        "--save_model",
+        action="store_true",
+        default=False,
+        help="Save the final model in addition to the best model."
+    )
     return parser.parse_args()
 
 
@@ -185,6 +191,7 @@ def main():
         num_epochs=args.epochs,
         log_interval=args.log_interval,
         save_dir=args.save_dir,
+        save_model=args.save_model,
     )
 
     plot_model_results(

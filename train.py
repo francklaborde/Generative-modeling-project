@@ -90,6 +90,7 @@ def train_model(
     num_epochs=50,
     log_interval=10,
     save_dir="checkpoints",
+    save_model=False
 ):
     """
     Trains the model for a given number of epochs, evaluates on a validation set,
@@ -127,13 +128,13 @@ def train_model(
         print(
             f"Epoch {epoch}/{num_epochs} - Train Loss: {train_loss:.4f} - Valid Loss: {valid_loss:.4f}"
         )
-
-        if valid_loss < best_valid_loss:
-            best_valid_loss = valid_loss
-            checkpoint_name = f"best_model_epoch{epoch}_valloss{valid_loss:.4f}.pth"
-            checkpoint_path = os.path.join(save_dir, checkpoint_name)
-            torch.save(model.state_dict(), checkpoint_path)
-            print(f"Saved best model checkpoint to {checkpoint_path}")
+        if save_model:
+            if valid_loss < best_valid_loss:
+                best_valid_loss = valid_loss
+                checkpoint_name = f"best_model_epoch{epoch}_valloss{valid_loss:.4f}.pth"
+                checkpoint_path = os.path.join(save_dir, checkpoint_name)
+                torch.save(model.state_dict(), checkpoint_path)
+                print(f"Saved best model checkpoint to {checkpoint_path}")
 
     history_path = os.path.join(save_dir, "training_history.json")
     with open(history_path, "w") as f:
