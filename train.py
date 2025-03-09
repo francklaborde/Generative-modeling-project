@@ -61,7 +61,7 @@ def evaluate(model, valid_loader, criterion, device):
     running_loss = 0.0
 
     with torch.no_grad():
-        for inputs, targets in tqdm(valid_loader, desc="Validation", leave=False):
+        for inputs, targets in valid_loader:
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = model(inputs)
             loss = criterion(outputs, targets)
