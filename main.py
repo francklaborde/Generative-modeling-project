@@ -36,13 +36,13 @@ def parse_args():
         help="Number of points in each of the training and validation datasets.",
     )
     parser.add_argument(
-        "--source_mu", 
+        "--source_mu",
         type=float,
         default=0,
         help="Mean of the source Gaussian distribution (applies to gaussian).",
     )
     parser.add_argument(
-        "--target_mu", 
+        "--target_mu",
         type=float,
         default=0,
         help="Mean of the target Gaussian distribution (applies to gaussian).",
@@ -105,7 +105,25 @@ def parse_args():
         "--save_model",
         action="store_true",
         default=False,
-        help="Save the final model in addition to the best model."
+        help="Save the final model in addition to the best model.",
+    )
+    parser.add_argument(
+        "--scheduler_factor",
+        type=float,
+        default=0.5,
+        help="Factor by which to reduce learning rate on plateau.",
+    )
+    parser.add_argument(
+        "--scheduler_patience",
+        type=int,
+        default=5,
+        help="Number of epochs with no improvement after which to reduce learning rate.",
+    )
+    parser.add_argument(
+        "--scheduler_min_lr",
+        type=float,
+        default=1e-8,
+        help="Minimum learning rate for the scheduler.",
     )
     parser.add_argument(
         "--plot_loss",
@@ -198,6 +216,9 @@ def main():
         log_interval=args.log_interval,
         save_dir=args.save_dir,
         save_model=args.save_model,
+        scheduler_factor=args.scheduler_factor,
+        scheduler_patience=args.scheduler_patience,
+        scheduler_min_lr=args.scheduler_min_lr,
     )
 
     plot_model_results(

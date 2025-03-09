@@ -2,6 +2,7 @@ import json
 import os
 
 import torch
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 
 
@@ -82,6 +83,9 @@ def train_model(
     log_interval=10,
     save_dir="checkpoints",
     save_model=False,
+    scheduler_factor=0.5,
+    scheduler_patience=5,
+    scheduler_min_lr=1e-8,
 ):
     """
     Trains the model for a given number of epochs, evaluates on a validation set,
@@ -107,6 +111,13 @@ def train_model(
     history = {"train_loss": [], "valid_loss": []}
     best_valid_loss = float("inf")
     pbar = tqdm(total=num_epochs, desc="Training")
+    scheduler = ReduceLROnPlateau(
+        optimizer,
+        mode="min",
+        factor=scheduler_factor,
+        patience=scheduler_patience,
+        min_lr=scheduler_min_lr,
+    )
     for epoch in range(1, num_epochs + 1):
         train_loss, _ = train_one_epoch(
             model, train_loader, criterion, optimizer, device, epoch, log_interval
@@ -115,9 +126,9 @@ def train_model(
 
         history["train_loss"].append(train_loss)
         history["valid_loss"].append(valid_loss)
-
+        lr = optimizer.param_groups[0]["lr"]
         pbar.set_description(
-            f"Train Loss: {train_loss:.4f} - Valid Loss: {valid_loss:.4f}"
+            f"Train Loss: {train_loss:.4f} - Valid Loss: {valid_loss:.4f} - lr: {lr}"
         )
         if save_model:
             if valid_loss < best_valid_loss:
@@ -126,6 +137,8 @@ def train_model(
                 checkpoint_path = os.path.join(save_dir, checkpoint_name)
                 torch.save(model.state_dict(), checkpoint_path)
                 print(f"Saved best model checkpoint to {checkpoint_path}")
+
+        scheduler.step(valid_loss)
 
         pbar.update(1)
     pbar.close()

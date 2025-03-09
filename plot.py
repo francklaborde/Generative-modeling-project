@@ -25,7 +25,7 @@ def plot_distributions(
     if torch.is_tensor(target):
         target = target.cpu().detach().numpy()
 
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+    fig, axes = plt.subplots(1, 4, figsize=(12, 6))
 
     axes[0].scatter(source[:, 0], source[:, 1], s=15, alpha=0.7, edgecolors="k")
     axes[0].set_title("Source Distribution", fontsize=14)
@@ -44,6 +44,23 @@ def plot_distributions(
     axes[2].set_xlabel("X")
     axes[2].set_ylabel("Y")
     axes[2].grid(True, linestyle="--", alpha=0.6)
+
+    axes[3].scatter(
+        generated[:, 0],
+        generated[:, 1],
+        s=15,
+        alpha=0.7,
+        color="tab:orange",
+        label="Generated",
+    )
+    axes[3].scatter(
+        target[:, 0], target[:, 1], s=15, alpha=0.7, color="tab:green", label="Target"
+    )
+    axes[3].legend()
+    axes[3].set_title("Generated vs Target", fontsize=14)
+    axes[3].set_xlabel("X")
+    axes[3].set_ylabel("Y")
+    axes[3].grid(True, linestyle="--", alpha=0.6)
 
     fig.suptitle(title, fontsize=16, y=1.02)
     fig.tight_layout(rect=[0, 0, 1, 0.95])
