@@ -127,7 +127,7 @@ def train_model(
                 torch.save(model.state_dict(), checkpoint_path)
                 print(f"Saved best model checkpoint to {checkpoint_path}")
 
-        pbar.update()
+        pbar.update(1)
     pbar.close()
     history_path = os.path.join(save_dir, "training_history.json")
     with open(history_path, "w") as f:
