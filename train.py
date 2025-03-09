@@ -125,7 +125,6 @@ def train_model(
             checkpoint_name = f"best_model_epoch{epoch}_valloss{valid_loss:.4f}.pth"
             checkpoint_path = os.path.join(save_dir, checkpoint_name)
             torch.save(model.state_dict(), checkpoint_path)
-            pbar.set_description(f"Saved best model checkpoint to {checkpoint_path}")
     pbar.close()
     history_path = os.path.join(save_dir, "training_history.json")
     with open(history_path, "w") as f:
