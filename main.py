@@ -35,6 +35,18 @@ def parse_args():
         help="Number of points in each of the training and validation datasets.",
     )
     parser.add_argument(
+        "--source_mu", 
+        type=float,
+        default=0,
+        help="Mean of the source Gaussian distribution (applies to gaussian).",
+    )
+    parser.add_argument(
+        "--target_mu", 
+        type=float,
+        default=0,
+        help="Mean of the target Gaussian distribution (applies to gaussian).",
+    )
+    parser.add_argument(
         "--dimension",
         type=int,
         default=2,
@@ -104,7 +116,7 @@ def main():
         source_dataset = make_dataset(
             args.source_dataset,
             num_samples=args.num_points,
-            mu=0,
+            mu=args.source_mu,
             sigma=args.source_noise,
             dim=args.dimension,
         )
@@ -117,7 +129,7 @@ def main():
         target_dataset = make_dataset(
             args.target_dataset,
             num_samples=args.num_points,
-            mu=0,
+            mu=args.target_mu,
             sigma=args.target_noise,
             dim=args.dimension,
         )
