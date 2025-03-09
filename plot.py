@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import torch
-
+import json
 
 def plot_distributions(
     source, generated, target, title="Distribution Comparison", filename=None
@@ -95,3 +95,30 @@ def plot_model_results(
     plot_distributions(
         source_tensor, generated_tensor, target_tensor, title=title, filename=filename
     )
+
+def plot_loss(training_history_path, filename=None):
+    """
+    Plot the training and validation loss from a training history file.
+
+    Args:
+        training_history_path (str): Path to the training history file.
+    """
+    with open(training_history_path, "r") as file:
+        file_contents = file.read()
+        history = json.loads(file_contents)
+
+    train_loss = history["train_loss"]
+    valid_loss = history["valid_loss"]
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_loss, label="Train Loss", color="blue", alpha=0.8)
+    plt.plot(valid_loss, label="Valid Loss", color="red", alpha=0.8)
+    plt.xlabel("Epoch", fontsize=12)
+    plt.ylabel("Loss", fontsize=12)
+    plt.title("Training and Validation Loss", fontsize=14)
+    plt.legend()
+    plt.grid(True)
+    
+    if filename:
+        plt.savefig(filename, dpi=300, bbox_inches="tight")
+    plt.show()

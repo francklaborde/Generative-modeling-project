@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from datasets import PairedDataset, make_dataset
 from loss import sw_loss
 from nets import MLPRelu
-from plot import plot_model_results
+from plot import plot_model_results, plot_loss
 from train import train_model
 
 
@@ -107,6 +107,12 @@ def parse_args():
         default=False,
         help="Save the final model in addition to the best model."
     )
+    parser.add_argument(
+        "--plot_loss",
+        action="store_true",
+        default=False,
+        help="Plot the training and validation loss after training.",
+    )
     return parser.parse_args()
 
 
@@ -203,6 +209,8 @@ def main():
         filename=f"{args.save_dir}/results_{args.source_dataset}_to_{args.target_dataset}_{args.dimension}d.png",
     )
 
+    if args.plot_loss:
+        plot_loss(f"{args.save_dir}/training_history.json", filename=f"{args.save_dir}/loss.png")
 
 if __name__ == "__main__":
     main()
