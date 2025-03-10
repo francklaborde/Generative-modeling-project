@@ -4,9 +4,9 @@ import torch
 from torch.utils.data import DataLoader
 
 from datasets import PairedDataset, make_dataset
-from loss import sw_loss
+from loss import SWDLoss
 from nets import MLPRelu
-from plot import plot_model_results, plot_loss
+from plot import plot_loss, plot_model_results
 from train import train_model
 
 
@@ -56,13 +56,13 @@ def parse_args():
     parser.add_argument(
         "--source_noise",
         type=float,
-        default=0.1,
+        default=1.0,
         help="Noise level for the source dataset (if applicable).",
     )
     parser.add_argument(
         "--target_noise",
         type=float,
-        default=0.1,
+        default=1.0,
         help="Noise level for the target dataset (if applicable).",
     )
 
@@ -131,6 +131,12 @@ def parse_args():
         default=False,
         help="Plot the training and validation loss after training.",
     )
+    parser.add_argument(
+        "--loss_projections",
+        type=int,
+        default=100,
+        help="Number of random projections for the SWD loss.",
+    )
     return parser.parse_args()
 
 
@@ -191,7 +197,7 @@ def main():
         input_dim=input_dim, hidden_layers=hidden_layers, output_dim=output_dim
     ).to(device)
 
-    criterion = sw_loss
+    criterion = SWDLoss(num_projections=args.loss_projections)
 
     if args.optimizer == "sgd":
         optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
@@ -231,7 +237,11 @@ def main():
     )
 
     if args.plot_loss:
-        plot_loss(f"{args.save_dir}/training_history.json", filename=f"{args.save_dir}/loss.png")
+        plot_loss(
+            f"{args.save_dir}/training_history.json",
+            filename=f"{args.save_dir}/loss.png",
+        )
+
 
 if __name__ == "__main__":
     main()
