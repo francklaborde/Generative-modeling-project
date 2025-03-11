@@ -91,10 +91,12 @@ class GaussianDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx]
 
+
 class FashionMNISTDataset(Dataset):
     """
     PyTorch Dataset for the Fashion MNIST dataset.
     """
+
     def __init__(self, num_samples=None, data_path="./data"):
         """
         Args:
@@ -106,26 +108,34 @@ class FashionMNISTDataset(Dataset):
 
         # Load Fashion MNIST dataset using torchvision.
         transform = torchvision.transforms.Compose(
-            [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize((0.5,), (0.5,))]
+            [
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize((0.5,), (0.5,)),
+            ]
         )
-        
+
         dataset = torchvision.datasets.FashionMNIST(
             root=data_path, train=True, download=True, transform=transform
-        )  
+        )
 
         images = [dataset[i][0] for i in range(len(dataset))]
 
-        assert num_samples <= len(dataset), "num_samples must be less than or equal to the dataset size."
+        assert num_samples <= len(
+            dataset
+        ), "num_samples must be less than or equal to the dataset size."
         if num_samples is not None:
-            self.data = torch.utils.data.Subset(images, np.random.choice(len(dataset), num_samples))
+            self.data = torch.utils.data.Subset(
+                images, np.random.choice(len(dataset), num_samples)
+            )
         else:
             self.data = images
-    
+
     def __len__(self):
         return self.num_samples
 
     def __getitem__(self, idx):
         return self.data[idx]
+
 
 def make_dataset(name, num_samples=1000, **kwargs):
     """

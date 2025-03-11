@@ -29,7 +29,8 @@ class MLPRelu(nn.Module):
 
     def forward(self, x):
         return self.network(x)
-    
+
+
 class CNN(nn.Module):
     def __init__(self, input_dim, output_dim, n_features=64):
         """
@@ -40,24 +41,54 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
 
         self.conv_transpose = nn.Sequential(
-            nn.ConvTranspose2d(in_channels = input_dim, out_channels = n_features * 8, kernel_size = 4, stride = 1, padding = 0),
-            #nn.BatchNorm2d(n_features * 8),
+            nn.ConvTranspose2d(
+                in_channels=input_dim,
+                out_channels=n_features * 8,
+                kernel_size=4,
+                stride=1,
+                padding=0,
+            ),
+            # nn.BatchNorm2d(n_features * 8),
             nn.ReLU(True),
             # state size. (n_features*8) x 4 x 4
-            nn.ConvTranspose2d(in_channels = n_features * 8, out_channels = n_features * 4, kernel_size = 4, stride = 2, padding = 1),
-            #nn.BatchNorm2d(n_features * 4),
+            nn.ConvTranspose2d(
+                in_channels=n_features * 8,
+                out_channels=n_features * 4,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+            ),
+            # nn.BatchNorm2d(n_features * 4),
             nn.ReLU(True),
             # state size. (n_features*4) x 8 x 8
-            nn.ConvTranspose2d(in_channels = n_features * 4, out_channels = n_features * 2, kernel_size = 4, stride = 2, padding = 1),
-            #nn.BatchNorm2d(n_features * 2),
+            nn.ConvTranspose2d(
+                in_channels=n_features * 4,
+                out_channels=n_features * 2,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+            ),
+            # nn.BatchNorm2d(n_features * 2),
             nn.ReLU(True),
             # state size. (n_features*2) x 16 x 16
-            nn.ConvTranspose2d(in_channels = n_features * 2, out_channels = n_features, kernel_size = 4, stride = 2, padding = 1),
-            #nn.BatchNorm2d(n_features),
+            nn.ConvTranspose2d(
+                in_channels=n_features * 2,
+                out_channels=n_features,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+            ),
+            # nn.BatchNorm2d(n_features),
             nn.ReLU(True),
             # state size. (n_features) x 32 x 32
-            nn.ConvTranspose2d(in_channels = n_features, out_channels = output_dim, kernel_size=1, stride=1, padding=2),
-            nn.Tanh()
+            nn.ConvTranspose2d(
+                in_channels=n_features,
+                out_channels=output_dim,
+                kernel_size=1,
+                stride=1,
+                padding=2,
+            ),
+            nn.Tanh(),
             # output size. 1 x 28 x 28
         )
 
@@ -66,11 +97,12 @@ class CNN(nn.Module):
         x.unsqueeze_(3)
         x = self.conv_transpose(x)
         return x.view(x.size(0), -1)
-    
+
+
 def make_model(name, input_dim, output_dim, hidden_layers=None):
     """
     Factory function for creating a model.
-    
+
     Args:
         name (str): Name of the model. Options: "mlp", "cnn".
         input_dim (int): Number of input features.
