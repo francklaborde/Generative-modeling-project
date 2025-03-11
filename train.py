@@ -135,11 +135,18 @@ def train_model(
         min_lr=scheduler_min_lr,
     )
     for epoch in range(1, num_epochs + 1):
+<<<<<<< HEAD
         train_loss, _, train_kl, _ = train_one_epoch(
             model, train_loader, criterion, optimizer, device, epoch, log_interval, mnist=mnist
         )
         valid_loss, valid_kl = evaluate(model, valid_loader, criterion, device, mnist=mnist)
 
+=======
+        train_loss, _ = train_one_epoch(
+            model, train_loader, criterion, optimizer, device, epoch, log_interval, mnist=mnist
+        )
+        valid_loss = evaluate(model, valid_loader, criterion, device, mnist=mnist)
+>>>>>>> 0197c2dd1df442795d88a1ff6b112734bceba36e
 
         history["train_loss"].append(train_loss)
         history["train_kl"].append(train_kl)
