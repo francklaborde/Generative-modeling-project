@@ -144,9 +144,10 @@ def plot_loss(training_history_path, filename=None):
     train_kl = history["train_kl"]
     valid_loss = history["valid_loss"]
     valid_kl = history["valid_kl"]
+    lr = history["lr"]
 
     # plt.figure(figsize=(10, 5))
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    fig, axes = plt.subplots(1, 3, figsize=(14, 6))
     axes[0].plot(train_loss, label="Train Loss", color="blue", alpha=0.8)
     axes[0].plot(valid_loss, label="Valid Loss", color="red", alpha=0.8)
     axes[0].set_xlabel("Epoch", fontsize=12)
@@ -162,6 +163,13 @@ def plot_loss(training_history_path, filename=None):
     axes[1].set_title("Training and Validation KL Divergence", fontsize=14)
     axes[1].legend()
     axes[1].grid(True)
+
+    axes[2].plot(lr, label="Learning Rate", color="green", alpha=0.8)
+    axes[2].set_xlabel("Epoch", fontsize=12)
+    axes[2].set_ylabel("Learning Rate", fontsize=12)
+    axes[2].set_title("Learning Rate Schedule", fontsize=14)
+    axes[2].legend()
+    axes[2].grid(True)
 
     if filename:
         plt.savefig(filename, dpi=300, bbox_inches="tight")
