@@ -101,6 +101,7 @@ def train_model(
     scheduler_patience=5,
     scheduler_min_lr=1e-8,
     mnist=False,
+    use_notebook=False,
 ):
     """
     Trains the model for a given number of epochs, evaluates on a validation set,
@@ -131,6 +132,8 @@ def train_model(
         "lr": [],
     }
     best_valid_loss = float("inf")
+    if use_notebook:
+        from tqdm.notebook import tqdm
     pbar = tqdm(total=num_epochs, desc="Training")
     scheduler = ReduceLROnPlateau(
         optimizer,

@@ -162,6 +162,12 @@ def parse_args():
         default="./data",
         help="Path to the directory where the dataset will be stored.",
     )
+    parser.add_argument(
+        "--use_notebook",
+        action="store_true",
+        default=False,
+        help="Use progress bar adapted for Jupyter notebooks.",
+    )
     return parser.parse_args()
 
 
@@ -274,6 +280,7 @@ def main():
         scheduler_patience=args.scheduler_patience,
         scheduler_min_lr=args.scheduler_min_lr,
         mnist=mnist,
+        use_notebook=False,
     )
 
     plot_model_results(
