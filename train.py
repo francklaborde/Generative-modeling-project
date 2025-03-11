@@ -5,6 +5,8 @@ import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 
+from loss import KLDiv
+
 
 def train_one_epoch(
     model, train_loader, criterion, optimizer, device, epoch, log_interval=10
@@ -27,7 +29,9 @@ def train_one_epoch(
     """
     model.train()
     running_loss = 0.0
+    running_KL = 0.0
     batch_losses = []
+    batch_KL = []
 
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         inputs, targets = inputs.to(device), targets.to(device)
@@ -40,9 +44,13 @@ def train_one_epoch(
 
         running_loss += loss.item()
         batch_losses.append(loss.item())
+        kl = KLDiv(outputs, targets)
+        running_KL += kl.item()
+        batch_KL.append(kl.item())
 
     avg_loss = running_loss / len(train_loader)
-    return avg_loss, batch_losses
+    avg_KL = running_KL / len(train_loader)
+    return avg_loss, batch_losses, avg_KL, batch_KL
 
 
 def evaluate(model, valid_loader, criterion, device):
@@ -60,6 +68,7 @@ def evaluate(model, valid_loader, criterion, device):
     """
     model.eval()
     running_loss = 0.0
+    running_KL = 0.0
 
     with torch.no_grad():
         for inputs, targets in valid_loader:
@@ -67,9 +76,11 @@ def evaluate(model, valid_loader, criterion, device):
             outputs = model(inputs)
             loss = criterion(outputs, targets)
             running_loss += loss.item()
+            running_KL += KLDiv(outputs, targets).item()
 
     avg_loss = running_loss / len(valid_loader)
-    return avg_loss
+    avg_KL = running_KL / len(valid_loader)
+    return avg_loss, avg_KL
 
 
 def train_model(
@@ -108,7 +119,7 @@ def train_model(
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    history = {"train_loss": [], "valid_loss": []}
+    history = {"train_loss": [], "valid_loss": [], "train_kl": [], "valid_kl": []}
     best_valid_loss = float("inf")
     pbar = tqdm(total=num_epochs, desc="Training")
     scheduler = ReduceLROnPlateau(
@@ -119,16 +130,18 @@ def train_model(
         min_lr=scheduler_min_lr,
     )
     for epoch in range(1, num_epochs + 1):
-        train_loss, _ = train_one_epoch(
+        train_loss, _, train_kl, _ = train_one_epoch(
             model, train_loader, criterion, optimizer, device, epoch, log_interval
         )
-        valid_loss = evaluate(model, valid_loader, criterion, device)
+        valid_loss, valid_kl = evaluate(model, valid_loader, criterion, device)
 
         history["train_loss"].append(train_loss)
+        history["train_kl"].append(train_kl)
         history["valid_loss"].append(valid_loss)
+        history["valid_kl"].append(valid_kl)
         lr = optimizer.param_groups[0]["lr"]
         pbar.set_description(
-            f"Train Loss: {train_loss:.4f} - Valid Loss: {valid_loss:.4f} - lr: {lr}"
+            f"Train Loss: {train_loss:.4f} - Train KL: {train_kl:.4f} - Valid Loss: {valid_loss:.4f} - Valid KL: {valid_kl:.4f} - lr: {lr}"
         )
         if save_model:
             if valid_loss < best_valid_loss:
@@ -136,7 +149,6 @@ def train_model(
                 checkpoint_name = f"best_model_epoch{epoch}_valloss{valid_loss:.4f}.pth"
                 checkpoint_path = os.path.join(save_dir, checkpoint_name)
                 torch.save(model.state_dict(), checkpoint_path)
-                print(f"Saved best model checkpoint to {checkpoint_path}")
 
         scheduler.step(valid_loss)
 
