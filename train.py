@@ -102,6 +102,7 @@ def train_model(
     scheduler_patience=5,
     scheduler_min_lr=1e-8,
     mnist=False,
+    use_notebook=False,
 ):
     """
     Trains the model for a given number of epochs, evaluates on a validation set,
@@ -126,6 +127,8 @@ def train_model(
 
     history = {"train_loss": [], "valid_loss": [], "train_kl": [], "valid_kl": []}
     best_valid_loss = float("inf")
+    if use_notebook:
+        from tqdm.notebook import tqdm
     pbar = tqdm(total=num_epochs, desc="Training")
     scheduler = ReduceLROnPlateau(
         optimizer,
@@ -135,18 +138,10 @@ def train_model(
         min_lr=scheduler_min_lr,
     )
     for epoch in range(1, num_epochs + 1):
-<<<<<<< HEAD
         train_loss, _, train_kl, _ = train_one_epoch(
             model, train_loader, criterion, optimizer, device, epoch, log_interval, mnist=mnist
         )
         valid_loss, valid_kl = evaluate(model, valid_loader, criterion, device, mnist=mnist)
-
-=======
-        train_loss, _ = train_one_epoch(
-            model, train_loader, criterion, optimizer, device, epoch, log_interval, mnist=mnist
-        )
-        valid_loss = evaluate(model, valid_loader, criterion, device, mnist=mnist)
->>>>>>> 0197c2dd1df442795d88a1ff6b112734bceba36e
 
         history["train_loss"].append(train_loss)
         history["train_kl"].append(train_kl)

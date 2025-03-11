@@ -149,6 +149,18 @@ def parse_args():
         default="./data",
         help="Path to the directory where the dataset will be stored.",
     )
+    parser.add_argument(
+        "--gif",
+        action="store_true",
+        default=False,
+        help="Save the generated images as a gif.",
+    )
+    parser.add_argument(
+        "--use_notebook",
+        action="store_true",
+        default=False,
+        help="Use the notebook backend for matplotlib.",
+    )
     return parser.parse_args()
 
 
@@ -160,7 +172,7 @@ def main():
     ]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    print(f"Using device: {device}")
     if args.source_dataset == "gaussian":
         source_dataset = make_dataset(
             args.source_dataset,
@@ -251,6 +263,7 @@ def main():
         scheduler_patience=args.scheduler_patience,
         scheduler_min_lr=args.scheduler_min_lr,
         mnist=mnist,
+        use_notebook=args.use_notebook,
     )
 
     plot_model_results(
