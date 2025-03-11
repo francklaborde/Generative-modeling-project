@@ -90,6 +90,12 @@ def parse_args():
         help="Optimizer to use: 'sgd' or 'npsgd' (npsgd is a placeholder for now).",
     )
     parser.add_argument(
+        "--momentum",
+        type=float,
+        default=0.0,
+        help="Momentum for the optimizer (if applicable).",
+    )
+    parser.add_argument(
         "--log_interval",
         type=int,
         default=10,

@@ -58,3 +58,17 @@ class SWDLoss(nn.Module):
             Tensor: Sliced Wasserstein distance.
         """
         return sw_loss(true_distribution, generated_distribution, self.num_projections)
+
+
+def KLDiv(p, q):
+    """
+    Compute the Kullback-Leibler Divergence (KL-Div) between two distributions.
+
+    Args:
+        p (Tensor): True distribution, shape [batch_size, num_classes].
+        q (Tensor): Estimated distribution, shape [batch_size, num_classes].
+
+    Returns:
+        Tensor: Kullback-Leibler divergence.
+    """
+    return F.kl_div(F.log_softmax(p, dim=1), F.softmax(q, dim=1), reduction="batchmean")

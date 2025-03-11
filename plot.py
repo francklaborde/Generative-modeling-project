@@ -1,6 +1,8 @@
+import json
+
 import matplotlib.pyplot as plt
 import torch
-import json
+
 
 def plot_distributions(
     source, generated, target, title="Distribution Comparison", filename=None
@@ -113,6 +115,7 @@ def plot_model_results(
         source_tensor, generated_tensor, target_tensor, title=title, filename=filename
     )
 
+
 def plot_loss(training_history_path, filename=None):
     """
     Plot the training and validation loss from a training history file.
@@ -125,17 +128,28 @@ def plot_loss(training_history_path, filename=None):
         history = json.loads(file_contents)
 
     train_loss = history["train_loss"]
+    train_kl = history["train_kl"]
     valid_loss = history["valid_loss"]
+    valid_kl = history["valid_kl"]
 
-    plt.figure(figsize=(10, 5))
-    plt.plot(train_loss, label="Train Loss", color="blue", alpha=0.8)
-    plt.plot(valid_loss, label="Valid Loss", color="red", alpha=0.8)
-    plt.xlabel("Epoch", fontsize=12)
-    plt.ylabel("Loss", fontsize=12)
-    plt.title("Training and Validation Loss", fontsize=14)
-    plt.legend()
-    plt.grid(True)
-    
+    # plt.figure(figsize=(10, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    axes[0].plot(train_loss, label="Train Loss", color="blue", alpha=0.8)
+    axes[0].plot(valid_loss, label="Valid Loss", color="red", alpha=0.8)
+    axes[0].set_xlabel("Epoch", fontsize=12)
+    axes[0].set_ylabel("Loss", fontsize=12)
+    axes[0].set_title("Training and Validation Loss", fontsize=14)
+    axes[0].legend()
+    axes[0].grid(True)
+
+    axes[1].plot(train_kl, label="Train KL", color="blue", alpha=0.8)
+    axes[1].plot(valid_kl, label="Valid KL", color="red", alpha=0.8)
+    axes[1].set_xlabel("Epoch", fontsize=12)
+    axes[1].set_ylabel("KL Divergence", fontsize=12)
+    axes[1].set_title("Training and Validation KL Divergence", fontsize=14)
+    axes[1].legend()
+    axes[1].grid(True)
+
     if filename:
         plt.savefig(filename, dpi=300, bbox_inches="tight")
     plt.show()
