@@ -27,7 +27,7 @@ def parse_args():
         "--target_dataset",
         type=str,
         default="two_moons",
-        choices=["two_moons", "swiss_roll", "gaussian", "fashion_mnist"],
+        choices=["two_moons", "swiss_roll", "gaussian", "fashion_mnist", "uniform"],
         help="Name of the target dataset.",
     )
     parser.add_argument(
@@ -66,7 +66,18 @@ def parse_args():
         default=0.1,
         help="Noise level for the target dataset (if applicable).",
     )
-
+    parser.add_argument(
+        "--uniform_low",
+        type=float,
+        default=0.0,
+        help="Lower bound for the uniform distribution (applies to uniform).",
+    )
+    parser.add_argument(
+        "--uniform_high",
+        type=float,
+        default=1.0,
+        help="Upper bound for the uniform distribution (applies to uniform).",
+    )
     # Model hyperparameters
     parser.add_argument(
         "--hidden_layers",
@@ -210,6 +221,14 @@ def main():
             sigma=args.target_noise,
             dim=args.dimension,
         )
+    elif args.source_dataset == "uniform":
+        target_dataset = make_dataset(
+            args.target_dataset,
+            num_samples=args.num_points,
+            low=args.uniform_low,
+            high=args.uniform_high,
+            dim=args.dimension,
+        )
     elif args.target_dataset == "fashion_mnist":
         target_dataset = make_dataset(
             args.target_dataset, num_samples=args.num_points, data_path=args.data_path
@@ -236,6 +255,7 @@ def main():
         if isinstance(sample_target, torch.Tensor)
         else len(sample_target)
     )
+    print(f"Input dimension: {input_dim}, Output dimension: {output_dim}")
 
     if args.target_dataset == "fashion_mnist":
         model = make_model("cnn", input_dim, output_dim=1, hidden_layers=hidden_layers)
@@ -243,6 +263,9 @@ def main():
     else:
         model = make_model("mlp", input_dim, output_dim, hidden_layers=hidden_layers)
         mnist = False
+    print(
+        f"Number of trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}"
+    )
     model.to(device)
 
     criterion = SWDLoss(num_projections=args.loss_projections)
