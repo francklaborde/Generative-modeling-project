@@ -5,13 +5,14 @@ import torch
 
 
 def plot_distributions(
-    source, generated, target, title="Distribution Comparison", filename=None
+    source, generated, target, title="Distribution Comparison", filename=None, mnist=False
 ):
     """
-    Plot three distributions side by side:
+    Plot four distributions side by side:
       - Left: Source distribution
-      - Middle: Generated distribution (output of model)
-      - Right: Target distribution
+      - Middle Left: Generated distribution (output of model)
+      - Middle Right: Target distribution
+      - Right: Generated vs Target distribution
 
     Args:
         source (Tensor or np.array): Samples from the source distribution, shape [n_samples, 2].
@@ -19,57 +20,73 @@ def plot_distributions(
         target (Tensor or np.array): Samples from the target distribution, shape [n_samples, 2].
         title (str): Overall title for the figure.
         filename (str, optional): If provided, the figure is saved to this file.
+        mnist (bool): If True, the data is from the Fashion MNIST dataset.
     """
-    if torch.is_tensor(source):
-        source = source.cpu().detach().numpy()
-    if torch.is_tensor(generated):
-        generated = generated.cpu().detach().numpy()
-    if torch.is_tensor(target):
-        target = target.cpu().detach().numpy()
+    if not mnist:
+        if torch.is_tensor(source):
+            source = source.cpu().detach().numpy()
+        if torch.is_tensor(generated):
+            generated = generated.cpu().detach().numpy()
+        if torch.is_tensor(target):
+            target = target.cpu().detach().numpy()
 
-    fig, axes = plt.subplots(1, 4, figsize=(12, 6))
+        fig, axes = plt.subplots(1, 4, figsize=(12, 6))
 
-    axes[0].scatter(source[:, 0], source[:, 1], s=15, alpha=0.7, edgecolors="k")
-    axes[0].set_title("Source Distribution", fontsize=14)
-    axes[0].set_xlabel("X")
-    axes[0].set_ylabel("Y")
-    axes[0].grid(True, linestyle="--", alpha=0.6)
+        axes[0].scatter(source[:, 0], source[:, 1], s=15, alpha=0.7, edgecolors="k")
+        axes[0].set_title("Source Distribution", fontsize=14)
+        axes[0].set_xlabel("X")
+        axes[0].set_ylabel("Y")
+        axes[0].grid(True, linestyle="--", alpha=0.6)
 
-    axes[1].scatter(generated[:, 0], generated[:, 1], s=15, alpha=0.7, edgecolors="k")
-    axes[1].set_title("Generated Distribution", fontsize=14)
-    axes[1].set_xlabel("X")
-    axes[1].set_ylabel("Y")
-    axes[1].grid(True, linestyle="--", alpha=0.6)
+        axes[1].scatter(generated[:, 0], generated[:, 1], s=15, alpha=0.7, edgecolors="k")
+        axes[1].set_title("Generated Distribution", fontsize=14)
+        axes[1].set_xlabel("X")
+        axes[1].set_ylabel("Y")
+        axes[1].grid(True, linestyle="--", alpha=0.6)
 
-    axes[2].scatter(target[:, 0], target[:, 1], s=15, alpha=0.7, edgecolors="k")
-    axes[2].set_title("Target Distribution", fontsize=14)
-    axes[2].set_xlabel("X")
-    axes[2].set_ylabel("Y")
-    axes[2].grid(True, linestyle="--", alpha=0.6)
+        axes[2].scatter(target[:, 0], target[:, 1], s=15, alpha=0.7, edgecolors="k")
+        axes[2].set_title("Target Distribution", fontsize=14)
+        axes[2].set_xlabel("X")
+        axes[2].set_ylabel("Y")
+        axes[2].grid(True, linestyle="--", alpha=0.6)
 
-    axes[3].scatter(
-        generated[:, 0],
-        generated[:, 1],
-        s=15,
-        alpha=0.7,
-        color="tab:orange",
-        label="Generated",
-    )
-    axes[3].scatter(
-        target[:, 0], target[:, 1], s=15, alpha=0.7, color="tab:green", label="Target"
-    )
-    axes[3].legend()
-    axes[3].set_title("Generated vs Target", fontsize=14)
-    axes[3].set_xlabel("X")
-    axes[3].set_ylabel("Y")
-    axes[3].grid(True, linestyle="--", alpha=0.6)
+        axes[3].scatter(
+            generated[:, 0],
+            generated[:, 1],
+            s=15,
+            alpha=0.7,
+            color="tab:orange",
+            label="Generated",
+        )
+        axes[3].scatter(
+            target[:, 0], target[:, 1], s=15, alpha=0.7, color="tab:green", label="Target"
+        )
+        axes[3].legend()
+        axes[3].set_title("Generated vs Target", fontsize=14)
+        axes[3].set_xlabel("X")
+        axes[3].set_ylabel("Y")
+        axes[3].grid(True, linestyle="--", alpha=0.6)
 
-    fig.suptitle(title, fontsize=16, y=1.02)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+        fig.suptitle(title, fontsize=16, y=1.02)
+        fig.tight_layout(rect=[0, 0, 1, 0.95])
 
-    if filename:
-        plt.savefig(filename, dpi=300, bbox_inches="tight")
-    plt.show()
+        if filename:
+            plt.savefig(filename, dpi=300, bbox_inches="tight")
+        plt.show()
+        
+    else:
+        fig, axes = plt.subplots(10, 10, figsize=(10, 10))
+        if generated.shape[1] == 784:
+            generated = generated.view(-1, 28, 28)
+        generated = generated[:100].cpu().detach().numpy()
+        for i, ax in enumerate(axes.flat):
+            ax.imshow(generated[i].squeeze(), cmap="gray")
+            ax.axis("off")
+        plt.suptitle(title, fontsize=16)
+        if filename:
+            plt.savefig(filename, dpi=300, bbox_inches="tight")
+        plt.show()
+
 
 
 def plot_model_results(
@@ -79,6 +96,7 @@ def plot_model_results(
     device,
     title="Distribution Comparison",
     filename=None,
+    mnist=False,
 ):
     """
     Generate predictions using the trained model on the source dataset and plot the
@@ -96,23 +114,18 @@ def plot_model_results(
     def dataset_to_tensor(dataset):
         if torch.is_tensor(dataset):
             return dataset
-        samples = []
-        for i in range(len(dataset)):
-            sample = dataset[i]
-            if isinstance(sample, (tuple, list)):
-                sample = sample[0]
-            samples.append(sample)
+        samples = [dataset[i][0] if isinstance(dataset[i], (tuple, list)) else dataset[i] for i in range(len(dataset))]
         return torch.stack(samples)
 
-    source_tensor = dataset_to_tensor(source_dataset)
+    source_tensor = dataset_to_tensor(source_dataset).to(device)
     target_tensor = dataset_to_tensor(target_dataset)
 
     model.eval()
     with torch.no_grad():
-        generated_tensor = model(source_tensor.to(device)).cpu()
+        generated_tensor = model(source_tensor).cpu()
 
     plot_distributions(
-        source_tensor, generated_tensor, target_tensor, title=title, filename=filename
+        source_tensor, generated_tensor, target_tensor, title=title, filename=filename, mnist=mnist
     )
 
 
