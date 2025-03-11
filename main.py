@@ -221,7 +221,6 @@ def main():
         model = make_model("mlp", input_dim, output_dim, hidden_layers=hidden_layers)
         mnist = False
     model.to(device)
-    print(model)
 
     criterion = SWDLoss(num_projections=args.loss_projections)
 
@@ -261,6 +260,7 @@ def main():
         device,
         title="Distribution Comparison",
         filename=f"{args.save_dir}/results_{args.source_dataset}_to_{args.target_dataset}_{args.dimension}d.png",
+        mnist=mnist,
     )
 
     if args.plot_loss:
