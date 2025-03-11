@@ -280,7 +280,7 @@ def main():
         scheduler_patience=args.scheduler_patience,
         scheduler_min_lr=args.scheduler_min_lr,
         mnist=mnist,
-        use_notebook=False,
+        use_notebook=args.use_notebook,
     )
 
     plot_model_results(
