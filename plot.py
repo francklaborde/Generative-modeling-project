@@ -8,10 +8,11 @@ def plot_distributions(
     source, generated, target, title="Distribution Comparison", filename=None
 ):
     """
-    Plot three distributions side by side:
+    Plot four distributions side by side:
       - Left: Source distribution
-      - Middle: Generated distribution (output of model)
-      - Right: Target distribution
+      - Middle Left: Generated distribution (output of model)
+      - Middle Right: Target distribution
+      - Right: Generated vs Target distribution
 
     Args:
         source (Tensor or np.array): Samples from the source distribution, shape [n_samples, 2].

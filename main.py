@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 
 from datasets import PairedDataset, make_dataset
 from loss import SWDLoss
-from nets import MLPRelu
+from nets import make_model
 from plot import plot_loss, plot_model_results
 from train import train_model
 
@@ -26,7 +26,7 @@ def parse_args():
         "--target_dataset",
         type=str,
         default="two_moons",
-        choices=["two_moons", "swiss_roll", "gaussian"],
+        choices=["two_moons", "swiss_roll", "gaussian", "fashion_mnist"],
         help="Name of the target dataset.",
     )
     parser.add_argument(
@@ -143,6 +143,12 @@ def parse_args():
         default=100,
         help="Number of random projections for the SWD loss.",
     )
+    parser.add_argument(
+        "--data_path",
+        type=str,
+        default="./data",
+        help="Path to the directory where the dataset will be stored.",
+    )
     return parser.parse_args()
 
 
@@ -163,6 +169,11 @@ def main():
             sigma=args.source_noise,
             dim=args.dimension,
         )
+    elif args.target_dataset == "fashion_mnist":
+        source_dataset = make_dataset(
+            "gaussian", num_samples=args.num_points, mu=args.source_mu, sigma=args.source_noise, dim=args.dimension
+        )
+
     else:
         source_dataset = make_dataset(
             args.source_dataset, num_samples=args.num_points, noise=args.source_noise
@@ -175,6 +186,10 @@ def main():
             mu=args.target_mu,
             sigma=args.target_noise,
             dim=args.dimension,
+        )
+    elif args.target_dataset == "fashion_mnist":
+        target_dataset = make_dataset(
+            args.target_dataset, num_samples=args.num_points, data_path=args.data_path
         )
     else:
         target_dataset = make_dataset(
@@ -198,10 +213,15 @@ def main():
         if isinstance(sample_target, torch.Tensor)
         else len(sample_target)
     )
-
-    model = MLPRelu(
-        input_dim=input_dim, hidden_layers=hidden_layers, output_dim=output_dim
-    ).to(device)
+    
+    if args.target_dataset == "fashion_mnist":
+        model = make_model('cnn', input_dim, output_dim=1, hidden_layers=hidden_layers)
+        mnist = True
+    else:
+        model = make_model("mlp", input_dim, output_dim, hidden_layers=hidden_layers)
+        mnist = False
+    model.to(device)
+    print(model)
 
     criterion = SWDLoss(num_projections=args.loss_projections)
 
@@ -231,6 +251,7 @@ def main():
         scheduler_factor=args.scheduler_factor,
         scheduler_patience=args.scheduler_patience,
         scheduler_min_lr=args.scheduler_min_lr,
+        mnist=mnist,
     )
 
     plot_model_results(

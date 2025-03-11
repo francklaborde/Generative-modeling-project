@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from sklearn.datasets import make_moons, make_swiss_roll
 from torch.utils.data import Dataset
+import torchvision
 
 
 class TwoMoonsDataset(Dataset):
@@ -90,6 +91,41 @@ class GaussianDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx]
 
+class FashionMNISTDataset(Dataset):
+    """
+    PyTorch Dataset for the Fashion MNIST dataset.
+    """
+    def __init__(self, num_samples=None, data_path="./data"):
+        """
+        Args:
+            num_samples (int): Number of samples to generate.
+            data_path (str): Path to the Fashion MNIST dataset.
+            transform (callable): Optional transform to apply to the samples. If not provided, the samples are converted to tensors and normalized.
+        """
+        self.num_samples = num_samples
+
+        # Load Fashion MNIST dataset using torchvision.
+        transform = torchvision.transforms.Compose(
+            [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize((0.5,), (0.5,))]
+        )
+        
+        dataset = torchvision.datasets.FashionMNIST(
+            root=data_path, train=True, download=True, transform=transform
+        )  
+
+        images = [dataset[i][0] for i in range(len(dataset))]
+
+        assert num_samples <= len(dataset), "num_samples must be less than or equal to the dataset size."
+        if num_samples is not None:
+            self.data = torch.utils.data.Subset(images, np.random.choice(len(dataset), num_samples))
+        else:
+            self.data = images
+    
+    def __len__(self):
+        return self.num_samples
+
+    def __getitem__(self, idx):
+        return self.data[idx]
 
 def make_dataset(name, num_samples=1000, **kwargs):
     """
@@ -102,6 +138,7 @@ def make_dataset(name, num_samples=1000, **kwargs):
             - For "two_moons": noise (default 0.1)
             - For "swiss_roll": noise (default 0.0)
             - For "gaussian": mu (default 0.0), sigma (default 1.0), dim (default 2)
+            - For "fashion_mnist": data_path (default "./data"), transform (default None)
 
     Returns:
         torch.utils.data.Dataset: An instance of the requested dataset.
@@ -118,6 +155,9 @@ def make_dataset(name, num_samples=1000, **kwargs):
         sigma = kwargs.get("sigma", 1.0)
         dim = kwargs.get("dim", 2)
         return GaussianDataset(num_samples, mu, sigma, dim)
+    elif name == "fashion_mnist":
+        data_path = kwargs.get("data_path", "./data")
+        return FashionMNISTDataset(num_samples, data_path=data_path)
     else:
         raise ValueError(f"Unknown dataset name: {name}")
 
