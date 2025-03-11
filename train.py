@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 def train_one_epoch(
-    model, train_loader, criterion, optimizer, device, epoch, log_interval=10
+    model, train_loader, criterion, optimizer, device, epoch, log_interval=10, mnist=False
 ):
     """
     Trains the model for one epoch.
@@ -34,6 +34,7 @@ def train_one_epoch(
 
         optimizer.zero_grad()
         outputs = model(inputs)
+        targets = targets.view(targets.size(0), -1)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
@@ -45,7 +46,7 @@ def train_one_epoch(
     return avg_loss, batch_losses
 
 
-def evaluate(model, valid_loader, criterion, device):
+def evaluate(model, valid_loader, criterion, device, mnist=False):
     """
     Evaluates the model on the validation set.
 
@@ -65,6 +66,9 @@ def evaluate(model, valid_loader, criterion, device):
         for inputs, targets in valid_loader:
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = model(inputs)
+            if mnist:
+                outputs = outputs.view(outputs.size(0), -1)
+                targets = targets.view(targets.size(0), -1)
             loss = criterion(outputs, targets)
             running_loss += loss.item()
 
@@ -86,6 +90,7 @@ def train_model(
     scheduler_factor=0.5,
     scheduler_patience=5,
     scheduler_min_lr=1e-8,
+    mnist=False,
 ):
     """
     Trains the model for a given number of epochs, evaluates on a validation set,
@@ -120,9 +125,9 @@ def train_model(
     )
     for epoch in range(1, num_epochs + 1):
         train_loss, _ = train_one_epoch(
-            model, train_loader, criterion, optimizer, device, epoch, log_interval
+            model, train_loader, criterion, optimizer, device, epoch, log_interval, mnist=mnist
         )
-        valid_loss = evaluate(model, valid_loader, criterion, device)
+        valid_loss = evaluate(model, valid_loader, criterion, device, mnist=mnist)
 
         history["train_loss"].append(train_loss)
         history["valid_loss"].append(valid_loss)

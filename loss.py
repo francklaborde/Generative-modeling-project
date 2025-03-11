@@ -20,7 +20,7 @@ def sw_loss(true_distribution, generated_distribution, num_projections=100):
     # Sample random projection directions
     theta = torch.randn(feature_dim, num_projections, device=true_distribution.device)
     theta = F.normalize(theta, dim=0)  # Normalize to unit norm
-
+    
     # Project the samples
     proj_true = true_distribution @ theta  # Shape: [batch_size, num_projections]
     proj_fake = generated_distribution @ theta  # Shape: [batch_size, num_projections]
