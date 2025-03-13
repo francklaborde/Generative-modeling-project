@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from datasets import PairedDataset, make_dataset
 from loss import SWDLoss
 from nets import make_model
+from optim import NoisedProjectedSGD
 from plot import plot_loss, plot_model_results
 from train import train_model
 
@@ -26,7 +27,7 @@ def parse_args():
         "--target_dataset",
         type=str,
         default="two_moons",
-        choices=["two_moons", "swiss_roll", "gaussian", "fashion_mnist"],
+        choices=["two_moons", "swiss_roll", "gaussian", "fashion_mnist", "uniform"],
         help="Name of the target dataset.",
     )
     parser.add_argument(
@@ -62,10 +63,21 @@ def parse_args():
     parser.add_argument(
         "--target_noise",
         type=float,
-        default=1.0,
+        default=0.1,
         help="Noise level for the target dataset (if applicable).",
     )
-
+    parser.add_argument(
+        "--uniform_low",
+        type=float,
+        default=0.0,
+        help="Lower bound for the uniform distribution (applies to uniform).",
+    )
+    parser.add_argument(
+        "--uniform_high",
+        type=float,
+        default=1.0,
+        help="Upper bound for the uniform distribution (applies to uniform).",
+    )
     # Model hyperparameters
     parser.add_argument(
         "--hidden_layers",
@@ -93,7 +105,19 @@ def parse_args():
         "--momentum",
         type=float,
         default=0.0,
-        help="Momentum for the optimizer (if applicable).",
+        help="Momentum of SGD.",
+    )
+    parser.add_argument(
+        "--radius",
+        type=float,
+        default=1.0,
+        help="Radius of the projection ball for NoisedProjectedSGD.",
+    )
+    parser.add_argument(
+        "--noise_scale",
+        type=float,
+        default=0.01,
+        help="Scale of the noise for NoisedProjectedSGD.",
     )
     parser.add_argument(
         "--log_interval",
@@ -183,7 +207,11 @@ def main():
         )
     elif args.target_dataset == "fashion_mnist":
         source_dataset = make_dataset(
-            "gaussian", num_samples=args.num_points, mu=args.source_mu, sigma=args.source_noise, dim=args.dimension
+            "gaussian",
+            num_samples=args.num_points,
+            mu=args.source_mu,
+            sigma=args.source_noise,
+            dim=args.dimension,
         )
 
     else:
@@ -197,6 +225,14 @@ def main():
             num_samples=args.num_points,
             mu=args.target_mu,
             sigma=args.target_noise,
+            dim=args.dimension,
+        )
+    elif args.source_dataset == "uniform":
+        target_dataset = make_dataset(
+            args.target_dataset,
+            num_samples=args.num_points,
+            low=args.uniform_low,
+            high=args.uniform_high,
             dim=args.dimension,
         )
     elif args.target_dataset == "fashion_mnist":
@@ -225,22 +261,32 @@ def main():
         if isinstance(sample_target, torch.Tensor)
         else len(sample_target)
     )
-    
+    print(f"Input dimension: {input_dim}, Output dimension: {output_dim}")
+
     if args.target_dataset == "fashion_mnist":
-        model = make_model('cnn', input_dim, output_dim=1, hidden_layers=hidden_layers)
+        model = make_model("cnn", input_dim, output_dim=1, hidden_layers=hidden_layers)
         mnist = True
     else:
         model = make_model("mlp", input_dim, output_dim, hidden_layers=hidden_layers)
         mnist = False
+    print(
+        f"Number of trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}"
+    )
     model.to(device)
 
     criterion = SWDLoss(num_projections=args.loss_projections)
 
     if args.optimizer == "sgd":
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+        optimizer = torch.optim.SGD(
+            model.parameters(), lr=args.lr, momentum=args.momentum
+        )
     elif args.optimizer == "npsgd":
-        print("npsgd selected but not implemented; falling back to standard SGD.")
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+        optimizer = NoisedProjectedSGD(
+            model.parameters(),
+            lr=args.lr,
+            radius=args.radius,
+            noise_scale=args.noise_scale,
+        )
     else:
         raise ValueError(f"Unknown optimizer: {args.optimizer}")
 

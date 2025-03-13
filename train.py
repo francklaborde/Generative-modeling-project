@@ -48,7 +48,6 @@ def train_one_epoch(
         kl = KLDiv(outputs, targets)
         running_KL += kl.item()
         batch_KL.append(kl.item())
-
     avg_loss = running_loss / len(train_loader)
     avg_KL = running_KL / len(train_loader)
     return avg_loss, batch_losses, avg_KL, batch_KL
@@ -125,7 +124,13 @@ def train_model(
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    history = {"train_loss": [], "valid_loss": [], "train_kl": [], "valid_kl": []}
+    history = {
+        "train_loss": [],
+        "valid_loss": [],
+        "train_kl": [],
+        "valid_kl": [],
+        "lr": [],
+    }
     best_valid_loss = float("inf")
     if use_notebook:
         from tqdm.notebook import tqdm
@@ -148,6 +153,7 @@ def train_model(
         history["valid_loss"].append(valid_loss)
         history["valid_kl"].append(valid_kl)
         lr = optimizer.param_groups[0]["lr"]
+        history["lr"].append(lr)
         pbar.set_description(
             f"Train Loss: {train_loss:.4f} - Train KL: {train_kl:.4f} - Valid Loss: {valid_loss:.4f} - Valid KL: {valid_kl:.4f} - lr: {lr}"
         )
@@ -161,6 +167,10 @@ def train_model(
         scheduler.step(valid_loss)
 
         pbar.update(1)
+        if use_notebook:
+            epoch_display = int(num_epochs / 20)
+            if epoch % epoch_display == 0:
+                print(f"Epoch {epoch}/{num_epochs} - Train Loss: {train_loss:.4f} - Train KL: {train_kl:.4f} - Valid Loss: {valid_loss:.4f} - Valid KL: {valid_kl:.4f} - lr: {lr}")
     pbar.close()
     history_path = os.path.join(save_dir, "training_history.json")
     with open(history_path, "w") as f:

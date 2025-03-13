@@ -5,7 +5,12 @@ import torch
 
 
 def plot_distributions(
-    source, generated, target, title="Distribution Comparison", filename=None, mnist=False
+    source,
+    generated,
+    target,
+    title="Distribution Comparison",
+    filename=None,
+    mnist=False,
 ):
     """
     Plot four distributions side by side:
@@ -38,7 +43,9 @@ def plot_distributions(
         axes[0].set_ylabel("Y")
         axes[0].grid(True, linestyle="--", alpha=0.6)
 
-        axes[1].scatter(generated[:, 0], generated[:, 1], s=15, alpha=0.7, edgecolors="k")
+        axes[1].scatter(
+            generated[:, 0], generated[:, 1], s=15, alpha=0.7, edgecolors="k"
+        )
         axes[1].set_title("Generated Distribution", fontsize=14)
         axes[1].set_xlabel("X")
         axes[1].set_ylabel("Y")
@@ -59,7 +66,12 @@ def plot_distributions(
             label="Generated",
         )
         axes[3].scatter(
-            target[:, 0], target[:, 1], s=15, alpha=0.7, color="tab:green", label="Target"
+            target[:, 0],
+            target[:, 1],
+            s=15,
+            alpha=0.7,
+            color="tab:green",
+            label="Target",
         )
         axes[3].legend()
         axes[3].set_title("Generated vs Target", fontsize=14)
@@ -73,7 +85,7 @@ def plot_distributions(
         if filename:
             plt.savefig(filename, dpi=300, bbox_inches="tight")
         plt.show()
-        
+
     else:
         fig, axes = plt.subplots(10, 10, figsize=(10, 10))
         if generated.shape[1] == 784:
@@ -86,7 +98,6 @@ def plot_distributions(
         if filename:
             plt.savefig(filename, dpi=300, bbox_inches="tight")
         plt.show()
-
 
 
 def plot_model_results(
@@ -114,7 +125,10 @@ def plot_model_results(
     def dataset_to_tensor(dataset):
         if torch.is_tensor(dataset):
             return dataset
-        samples = [dataset[i][0] if isinstance(dataset[i], (tuple, list)) else dataset[i] for i in range(len(dataset))]
+        samples = [
+            dataset[i][0] if isinstance(dataset[i], (tuple, list)) else dataset[i]
+            for i in range(len(dataset))
+        ]
         return torch.stack(samples)
 
     source_tensor = dataset_to_tensor(source_dataset).to(device)
@@ -125,7 +139,12 @@ def plot_model_results(
         generated_tensor = model(source_tensor).cpu()
 
     plot_distributions(
-        source_tensor, generated_tensor, target_tensor, title=title, filename=filename, mnist=mnist
+        source_tensor,
+        generated_tensor,
+        target_tensor,
+        title=title,
+        filename=filename,
+        mnist=mnist,
     )
 
 
@@ -144,13 +163,14 @@ def plot_loss(training_history_path, filename=None):
     train_kl = history["train_kl"]
     valid_loss = history["valid_loss"]
     valid_kl = history["valid_kl"]
+    lr = history["lr"]
 
     # plt.figure(figsize=(10, 5))
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
     axes[0].plot(train_loss, label="Train Loss", color="blue", alpha=0.8)
     axes[0].plot(valid_loss, label="Valid Loss", color="red", alpha=0.8)
     axes[0].set_xlabel("Epoch", fontsize=12)
-    axes[0].set_ylabel("Loss", fontsize=12)
+    # axes[0].set_ylabel("Loss", fontsize=12)
     axes[0].set_title("Training and Validation Loss", fontsize=14)
     axes[0].legend()
     axes[0].grid(True)
@@ -158,10 +178,17 @@ def plot_loss(training_history_path, filename=None):
     axes[1].plot(train_kl, label="Train KL", color="blue", alpha=0.8)
     axes[1].plot(valid_kl, label="Valid KL", color="red", alpha=0.8)
     axes[1].set_xlabel("Epoch", fontsize=12)
-    axes[1].set_ylabel("KL Divergence", fontsize=12)
+    # axes[1].set_ylabel("KL Divergence", fontsize=12)
     axes[1].set_title("Training and Validation KL Divergence", fontsize=14)
     axes[1].legend()
     axes[1].grid(True)
+
+    axes[2].plot(lr, label="Learning Rate", color="green", alpha=0.8)
+    axes[2].set_xlabel("Epoch", fontsize=12)
+    # axes[2].set_ylabel("Learning Rate", fontsize=12)
+    axes[2].set_title("Learning Rate Schedule", fontsize=14)
+    axes[2].legend()
+    axes[2].grid(True)
 
     if filename:
         plt.savefig(filename, dpi=300, bbox_inches="tight")
