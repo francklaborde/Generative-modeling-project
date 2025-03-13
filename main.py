@@ -17,6 +17,13 @@ def parse_args():
     )
     # Dataset parameters
     parser.add_argument(
+        "--model",
+        type=str,
+        default="mlp",
+        choices=["mlp", "cnn", "generator"],
+        help="Name of the model to use.",
+    )
+    parser.add_argument(
         "--source_dataset",
         type=str,
         default="gaussian",
@@ -177,7 +184,7 @@ def parse_args():
         "--use_notebook",
         action="store_true",
         default=False,
-        help="Use progress bar adapted for Jupyter notebooks.",
+        help="Use the notebook backend for matplotlib.",
     )
     return parser.parse_args()
 
@@ -190,7 +197,7 @@ def main():
     ]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    print(f"Using device: {device}")
     if args.source_dataset == "gaussian":
         source_dataset = make_dataset(
             args.source_dataset,
@@ -258,7 +265,11 @@ def main():
     print(f"Input dimension: {input_dim}, Output dimension: {output_dim}")
 
     if args.target_dataset == "fashion_mnist":
-        model = make_model("cnn", input_dim, output_dim=1, hidden_layers=hidden_layers)
+        assert args.model in ["cnn", "generator"], "Only CNN and generator models are supported for Fashion MNIST"
+        if args.model == "cnn":
+            model = make_model("cnn", input_dim, output_dim=1, hidden_layers=hidden_layers)
+        elif args.model == "generator":
+            model = make_model("generator", input_dim, output_dim=1)
         mnist = True
     else:
         model = make_model("mlp", input_dim, output_dim, hidden_layers=hidden_layers)

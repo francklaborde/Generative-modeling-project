@@ -98,6 +98,42 @@ class CNN(nn.Module):
         x = self.conv_transpose(x)
         return x.view(x.size(0), -1)
 
+class Generator(nn.Module):
+    def __init__(self, d, output_dim=1):
+        super(Generator, self).__init__()
+        
+        self.d = d
+        self.l1 = nn.Sequential(nn.Linear(self.d, 7*7*1024),
+                                #nn.BatchNorm1d(7*7*1024),
+                                nn.ReLU())
+        
+        self.l2 = nn.Sequential(nn.ConvTranspose2d(1024, 512, 4, 2, 1),
+                                #nn.BatchNorm2d(512),
+                                nn.ReLU())
+        
+        self.l3 = nn.Sequential(nn.ConvTranspose2d(512, 256, 4, 2, 1),
+                                #nn.BatchNorm2d(256),
+                                nn.ReLU())
+        
+        self.l4 = nn.Sequential(nn.ConvTranspose2d(256, 128, 3, 1, 1),
+                                #nn.BatchNorm2d(128),
+                                nn.ReLU())
+        
+        self.l5 = nn.Sequential(nn.ConvTranspose2d(128, 128, 3, 1, 1),
+                                #nn.BatchNorm2d(128),
+                                nn.ReLU())
+        
+        self.l6 = nn.Sequential(nn.ConvTranspose2d(128, output_dim, 3, 1, 1, bias=False),
+                                nn.Sigmoid())
+        
+    def forward(self, z):
+        x = self.l1(z)
+        x = self.l2(x.view(-1, 1024, 7, 7))
+        x = self.l3(x)
+        x = self.l4(x)
+        x = self.l5(x)
+        x = self.l6(x)
+        return x.view(x.size(0), -1)
 
 def make_model(name, input_dim, output_dim, hidden_layers=None):
     """
@@ -115,5 +151,7 @@ def make_model(name, input_dim, output_dim, hidden_layers=None):
         return MLPRelu(input_dim, hidden_layers, output_dim)
     elif name == "cnn":
         return CNN(input_dim, output_dim)
+    elif name == "generator":
+        return Generator(input_dim, output_dim)
     else:
         raise ValueError(f"Unknown model name: {name}")

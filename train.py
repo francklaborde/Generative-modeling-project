@@ -153,9 +153,14 @@ def train_model(
         history["valid_kl"].append(valid_kl)
         lr = optimizer.param_groups[0]["lr"]
         history["lr"].append(lr)
-        pbar.set_description(
-            f"Train Loss: {train_loss:.4f} - Train KL: {train_kl:.4f} - Valid Loss: {valid_loss:.4f} - Valid KL: {valid_kl:.4f} - lr: {lr}"
-        )
+        if not use_notebook:
+            pbar.set_description(
+                f"Train Loss: {train_loss:.4f} - Train KL: {train_kl:.4f} - Valid Loss: {valid_loss:.4f} - Valid KL: {valid_kl:.4f} - lr: {lr}"
+            )
+        else:
+            pbar.set_description(
+                f"Epoch {epoch}/{num_epochs+1} Train Loss: {train_loss:.4f} - Train KL: {train_kl:.4f} - Valid Loss: {valid_loss:.4f} - Valid KL: {valid_kl:.4f} - lr: {lr}"
+            )
         if save_model:
             if valid_loss < best_valid_loss:
                 best_valid_loss = valid_loss
@@ -166,10 +171,7 @@ def train_model(
         scheduler.step(valid_loss)
 
         pbar.update(1)
-        if use_notebook:
-            epoch_display = int(num_epochs / 20)
-            if epoch % epoch_display == 0:
-                print(f"Epoch {epoch}/{num_epochs} - Train Loss: {train_loss:.4f} - Train KL: {train_kl:.4f} - Valid Loss: {valid_loss:.4f} - Valid KL: {valid_kl:.4f} - lr: {lr}")
+        
     pbar.close()
     history_path = os.path.join(save_dir, "training_history.json")
     with open(history_path, "w") as f:
