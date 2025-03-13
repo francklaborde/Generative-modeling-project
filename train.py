@@ -132,8 +132,6 @@ def train_model(
         "lr": [],
     }
     best_valid_loss = float("inf")
-    if use_notebook:
-        from tqdm.notebook import tqdm
     pbar = tqdm(total=num_epochs, desc="Training")
     scheduler = ReduceLROnPlateau(
         optimizer,
@@ -168,6 +166,10 @@ def train_model(
         scheduler.step(valid_loss)
 
         pbar.update(1)
+        if use_notebook:
+            epoch_display = int(num_epochs / 20)
+            if epoch % epoch_display == 0:
+                print(f"Epoch {epoch}/{num_epochs} - Train Loss: {train_loss:.4f} - Train KL: {train_kl:.4f} - Valid Loss: {valid_loss:.4f} - Valid KL: {valid_kl:.4f} - lr: {lr}")
     pbar.close()
     history_path = os.path.join(save_dir, "training_history.json")
     with open(history_path, "w") as f:
