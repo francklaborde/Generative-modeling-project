@@ -159,7 +159,7 @@ def train_model(
             )
         else:
             pbar.set_description(
-                f"Epoch {epoch}/{num_epochs+1} Train Loss: {train_loss:.4f} - Train KL: {train_kl:.4f} - Valid Loss: {valid_loss:.4f} - Valid KL: {valid_kl:.4f} - lr: {lr}"
+                f"Epoch {epoch}/{num_epochs} Train Loss: {train_loss:.4f} - Train KL: {train_kl:.4f} - Valid Loss: {valid_loss:.4f} - Valid KL: {valid_kl:.4f} - lr: {lr}"
             )
         if save_model:
             if valid_loss < best_valid_loss:

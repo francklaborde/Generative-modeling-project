@@ -123,7 +123,7 @@ def parse_args():
     parser.add_argument(
         "--noise_scale",
         type=float,
-        default=0.01,
+        default=1,
         help="Scale of the noise for NoisedProjectedSGD.",
     )
     parser.add_argument(
