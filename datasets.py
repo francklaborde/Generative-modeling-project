@@ -1,8 +1,8 @@
 import numpy as np
 import torch
+import torchvision
 from sklearn.datasets import make_moons, make_swiss_roll
 from torch.utils.data import Dataset
-import torchvision
 
 
 class TwoMoonsDataset(Dataset):
@@ -18,7 +18,6 @@ class TwoMoonsDataset(Dataset):
         """
         self.num_samples = num_samples
         self.noise = noise
-        # Generate data using sklearn's make_moons function.
         X, _ = make_moons(n_samples=num_samples, noise=noise)
         self.data = torch.tensor(X, dtype=torch.float32)
 
@@ -42,9 +41,43 @@ class SwissRollDataset(Dataset):
         """
         self.num_samples = num_samples
         self.noise = noise
-        # Generate data using sklearn's make_swiss_roll function.
         X, _ = make_swiss_roll(n_samples=num_samples, noise=noise)
-        # Swiss roll is typically 3D. If desired, one could slice dimensions.
+        self.data = torch.tensor(X, dtype=torch.float32)
+
+    def __len__(self):
+        return self.num_samples
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+
+class UniformDataset(Dataset):
+    """
+    PyTorch Dataset for the Uniform distribution.
+    """
+
+    def __init__(self, num_samples, low=0.0, high=1.0, dim=2):
+        """
+        Args:
+            num_samples (int): Number of samples to generate.
+            low (float or array-like): Lower bound of the Uniform distribution.
+            high (float or array-like): Upper bound of the Uniform distribution.
+            dim (int): Dimensionality of the samples.
+        """
+        self.num_samples = num_samples
+        self.low = low
+        self.high = high
+
+        if np.isscalar(low):
+            low_arr = np.full((dim,), low)
+        else:
+            low_arr = np.array(low)
+        if np.isscalar(high):
+            high_arr = np.full((dim,), high)
+        else:
+            high_arr = np.array(high)
+
+        X = np.random.uniform(low=low_arr, high=high_arr, size=(num_samples, dim))
         self.data = torch.tensor(X, dtype=torch.float32)
 
     def __len__(self):
@@ -168,6 +201,11 @@ def make_dataset(name, num_samples=1000, **kwargs):
     elif name == "fashion_mnist":
         data_path = kwargs.get("data_path", "./data")
         return FashionMNISTDataset(num_samples, data_path=data_path)
+    elif name == "uniform":
+        low = kwargs.get("low", 0.0)
+        high = kwargs.get("high", 1.0)
+        dim = kwargs.get("dim", 2)
+        return UniformDataset(num_samples, low, high, dim)
     else:
         raise ValueError(f"Unknown dataset name: {name}")
 
