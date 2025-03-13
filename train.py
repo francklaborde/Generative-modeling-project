@@ -9,7 +9,14 @@ from loss import KLDiv
 
 
 def train_one_epoch(
-    model, train_loader, criterion, optimizer, device, epoch, log_interval=10, mnist=False
+    model,
+    train_loader,
+    criterion,
+    optimizer,
+    device,
+    epoch,
+    log_interval=10,
+    mnist=False,
 ):
     """
     Trains the model for one epoch.
@@ -142,10 +149,18 @@ def train_model(
     )
     for epoch in range(1, num_epochs + 1):
         train_loss, _, train_kl, _ = train_one_epoch(
-            model, train_loader, criterion, optimizer, device, epoch, log_interval, mnist=mnist
+            model,
+            train_loader,
+            criterion,
+            optimizer,
+            device,
+            epoch,
+            log_interval,
+            mnist=mnist,
         )
-        valid_loss, valid_kl = evaluate(model, valid_loader, criterion, device, mnist=mnist)
-
+        valid_loss, valid_kl = evaluate(
+            model, valid_loader, criterion, device, mnist=mnist
+        )
 
         history["train_loss"].append(train_loss)
         history["train_kl"].append(train_kl)

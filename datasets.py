@@ -10,16 +10,18 @@ class TwoMoonsDataset(Dataset):
     PyTorch Dataset for the Two Moons distribution.
     """
 
-    def __init__(self, num_samples, noise=0.1):
+    def __init__(self, num_samples, noise=0.1, scale=1.0):
         """
         Args:
             num_samples (int): Number of samples to generate.
             noise (float): Standard deviation of Gaussian noise added to the two moons.
+            scale (float): Scaling factor for the two moons.
         """
         self.num_samples = num_samples
         self.noise = noise
+        self.scale = scale
         X, _ = make_moons(n_samples=num_samples, noise=noise)
-        self.data = torch.tensor(X, dtype=torch.float32)
+        self.data = torch.tensor(X, dtype=torch.float32) * scale
 
     def __len__(self):
         return self.num_samples
@@ -33,16 +35,18 @@ class SwissRollDataset(Dataset):
     PyTorch Dataset for the Swiss Roll distribution.
     """
 
-    def __init__(self, num_samples, noise=0.0):
+    def __init__(self, num_samples, noise=0.0, scale=1.0):
         """
         Args:
             num_samples (int): Number of samples to generate.
             noise (float): Standard deviation of noise added to the swiss roll.
+            scale (float): Scaling factor for the swiss roll.
         """
         self.num_samples = num_samples
         self.noise = noise
         X, _ = make_swiss_roll(n_samples=num_samples, noise=noise)
-        self.data = torch.tensor(X, dtype=torch.float32)
+        X = X[:, [0, 2]]
+        self.data = torch.tensor(X, dtype=torch.float32) * scale
 
     def __len__(self):
         return self.num_samples
@@ -125,6 +129,32 @@ class GaussianDataset(Dataset):
         return self.data[idx]
 
 
+class DiscretePointsDataset(Dataset):
+    """
+    PyTorch Dataset for a set of discrete points.
+    """
+
+    def __init__(self, num_samples, low=0.0, high=1.0, dim=2):
+        """
+        Args:
+            num_samples (int): Number of samples to generate.
+            low (float or array-like): Lower bound of the Uniform distribution.
+            high (float or array-like): Upper bound of the Uniform distribution.
+            dim (int): Dimensionality of the samples.
+        """
+        self.num_samples = num_samples
+        self.dim = dim
+
+        X = np.random.uniform(low=low, high=high, size=(num_samples, dim))
+        self.data = torch.tensor(X, dtype=torch.float32)
+
+    def __len__(self):
+        return self.num_samples
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+
 class FashionMNISTDataset(Dataset):
     """
     PyTorch Dataset for the Fashion MNIST dataset.
@@ -189,10 +219,12 @@ def make_dataset(name, num_samples=1000, **kwargs):
     name = name.lower()
     if name == "two_moons":
         noise = kwargs.get("noise", 0.1)
-        return TwoMoonsDataset(num_samples, noise)
+        scale = kwargs.get("scale", 1.0)
+        return TwoMoonsDataset(num_samples, noise, scale)
     elif name == "swiss_roll":
         noise = kwargs.get("noise", 0.0)
-        return SwissRollDataset(num_samples, noise)
+        scale = kwargs.get("scale", 1.0)
+        return SwissRollDataset(num_samples, noise, scale)
     elif name == "gaussian":
         mu = kwargs.get("mu", 0.0)
         sigma = kwargs.get("sigma", 1.0)
@@ -206,6 +238,11 @@ def make_dataset(name, num_samples=1000, **kwargs):
         high = kwargs.get("high", 1.0)
         dim = kwargs.get("dim", 2)
         return UniformDataset(num_samples, low, high, dim)
+    elif name == "discrete_points":
+        low = kwargs.get("low", 0.0)
+        high = kwargs.get("high", 1.0)
+        dim = kwargs.get("dim", 2)
+        return DiscretePointsDataset(num_samples, low, high, dim)
     else:
         raise ValueError(f"Unknown dataset name: {name}")
 
