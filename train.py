@@ -186,7 +186,7 @@ def train_model(
         scheduler.step(valid_loss)
 
         pbar.update(1)
-        
+
     pbar.close()
     history_path = os.path.join(save_dir, "training_history.json")
     with open(history_path, "w") as f:

@@ -4,31 +4,40 @@ import torch.nn.functional as F
 
 
 class MLPRelu(nn.Module):
-    def __init__(self, input_dim, hidden_layers, output_dim):
-        """
-        Args:
-            input_dim (int): Number of input features.
-            hidden_layers (list): List of hidden layer sizes.
-            output_dim (int): Number of output features.
-        """
-        super(MLPRelu, self).__init__()
+    def __init__(self, d_in, hidden_layers, d_out):
+        super().__init__()
+        self.layer_dims = [d_in] + hidden_layers + [d_out]
+        self.num_layers = len(self.layer_dims) - 1
 
-        assert (
-            isinstance(hidden_layers, list) and len(hidden_layers) > 0
-        ), "hidden_layers must be a non-empty list"
+        self.weights = nn.ModuleList()
+        self.biases = nn.ParameterList()
 
-        layers = []
-        layers.append(nn.Linear(input_dim, hidden_layers[0]))
-        layers.append(nn.ReLU())
-        for i in range(len(hidden_layers) - 1):
-            layers.append(nn.Linear(hidden_layers[i], hidden_layers[i + 1]))
-            layers.append(nn.ReLU())
-        layers.append(nn.Linear(hidden_layers[-1], output_dim))
+        for n in range(1, len(self.layer_dims)):
+            weight_n = nn.ParameterList()
+            for i in range(n):
+                W = nn.Parameter(
+                    torch.randn(self.layer_dims[n], self.layer_dims[i])
+                    * (2 / self.layer_dims[i]) ** 0.5  # He initialization
+                )
+                weight_n.append(W)
+            self.weights.append(weight_n)
 
-        self.network = nn.Sequential(*layers)
+            b_n = nn.Parameter(torch.randn(self.layer_dims[n]))
+            self.biases.append(b_n)
 
     def forward(self, x):
-        return self.network(x)
+        h = [x]
+
+        for n in range(self.num_layers):
+            out = (
+                sum(torch.matmul(h_i, W_ni.T) for W_ni, h_i in zip(self.weights[n], h))
+                + self.biases[n]
+            )
+            if n < self.num_layers - 1:
+                out = F.relu(out)
+            h.append(out)
+
+        return h[-1]
 
 
 class CNN(nn.Module):
@@ -98,34 +107,46 @@ class CNN(nn.Module):
         x = self.conv_transpose(x)
         return x.view(x.size(0), -1)
 
+
 class Generator(nn.Module):
     def __init__(self, d, output_dim=1):
         super(Generator, self).__init__()
-        
+
         self.d = d
-        self.l1 = nn.Sequential(nn.Linear(self.d, 7*7*1024),
-                                #nn.BatchNorm1d(7*7*1024),
-                                nn.ReLU())
-        
-        self.l2 = nn.Sequential(nn.ConvTranspose2d(1024, 512, 4, 2, 1),
-                                #nn.BatchNorm2d(512),
-                                nn.ReLU())
-        
-        self.l3 = nn.Sequential(nn.ConvTranspose2d(512, 256, 4, 2, 1),
-                                #nn.BatchNorm2d(256),
-                                nn.ReLU())
-        
-        self.l4 = nn.Sequential(nn.ConvTranspose2d(256, 128, 3, 1, 1),
-                                #nn.BatchNorm2d(128),
-                                nn.ReLU())
-        
-        self.l5 = nn.Sequential(nn.ConvTranspose2d(128, 128, 3, 1, 1),
-                                #nn.BatchNorm2d(128),
-                                nn.ReLU())
-        
-        self.l6 = nn.Sequential(nn.ConvTranspose2d(128, output_dim, 3, 1, 1, bias=False),
-                                nn.Sigmoid())
-        
+        self.l1 = nn.Sequential(
+            nn.Linear(self.d, 7 * 7 * 1024),
+            # nn.BatchNorm1d(7*7*1024),
+            nn.ReLU(),
+        )
+
+        self.l2 = nn.Sequential(
+            nn.ConvTranspose2d(1024, 512, 4, 2, 1),
+            # nn.BatchNorm2d(512),
+            nn.ReLU(),
+        )
+
+        self.l3 = nn.Sequential(
+            nn.ConvTranspose2d(512, 256, 4, 2, 1),
+            # nn.BatchNorm2d(256),
+            nn.ReLU(),
+        )
+
+        self.l4 = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, 3, 1, 1),
+            # nn.BatchNorm2d(128),
+            nn.ReLU(),
+        )
+
+        self.l5 = nn.Sequential(
+            nn.ConvTranspose2d(128, 128, 3, 1, 1),
+            # nn.BatchNorm2d(128),
+            nn.ReLU(),
+        )
+
+        self.l6 = nn.Sequential(
+            nn.ConvTranspose2d(128, output_dim, 3, 1, 1, bias=False), nn.Sigmoid()
+        )
+
     def forward(self, z):
         x = self.l1(z)
         x = self.l2(x.view(-1, 1024, 7, 7))
@@ -134,6 +155,7 @@ class Generator(nn.Module):
         x = self.l5(x)
         x = self.l6(x)
         return x.view(x.size(0), -1)
+
 
 def make_model(name, input_dim, output_dim, hidden_layers=None):
     """
@@ -151,6 +173,8 @@ def make_model(name, input_dim, output_dim, hidden_layers=None):
         return MLPRelu(input_dim, hidden_layers, output_dim)
     elif name == "cnn":
         return CNN(input_dim, output_dim)
+    elif name == "recursive_cnn":
+        return RecursiveCNN(input_dim, output_dim)
     elif name == "generator":
         return Generator(input_dim, output_dim)
     else:

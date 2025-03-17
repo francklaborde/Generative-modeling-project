@@ -20,7 +20,7 @@ def parse_args():
         "--model",
         type=str,
         default="mlp",
-        choices=["mlp", "cnn", "generator"],
+        choices=["mlp", "cnn", "generator", "recursive_cnn"],
         help="Name of the model to use.",
     )
     parser.add_argument(
@@ -297,11 +297,12 @@ def main():
     print(f"Input dimension: {input_dim}, Output dimension: {output_dim}")
 
     if args.target_dataset == "fashion_mnist":
-        assert args.model in ["cnn", "generator"], "Only CNN and generator models are supported for Fashion MNIST"
-        if args.model == "cnn":
-            model = make_model("cnn", input_dim, output_dim=1, hidden_layers=hidden_layers)
-        elif args.model == "generator":
-            model = make_model("generator", input_dim, output_dim=1)
+        assert args.model in [
+            "cnn",
+            "recursive_cnn",
+            "generator",
+        ], "Only CNN and generator models are supported for Fashion MNIST"
+        model = make_model(args.model, input_dim, 1)
         mnist = True
     else:
         model = make_model("mlp", input_dim, output_dim, hidden_layers=hidden_layers)
