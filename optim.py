@@ -38,7 +38,7 @@ class NoisedProjectedSGD(Optimizer):
 
                 # Add noise
                 noise = group["noise_scale"] * torch.randn_like(p.data)
-                param_update += noise
+                param_update += noise * group["lr"]
 
                 # Project onto the ball
                 p.data.add_(param_update)
