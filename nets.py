@@ -108,52 +108,103 @@ class CNN(nn.Module):
         return x.view(x.size(0), -1)
 
 
-class Generator(nn.Module):
-    def __init__(self, d, output_dim=1):
-        super(Generator, self).__init__()
+class ResCNN(nn.Module):
+    def __init__(self, input_dim, output_dim, n_features=64):
+        """
+        Args:
+            input_dim (int): Number of input features.
+            output_dim (int): Number of output features.
+        """
+        super(ResCNN, self).__init__()
 
-        self.d = d
-        self.l1 = nn.Sequential(
-            nn.Linear(self.d, 7 * 7 * 1024),
-            # nn.BatchNorm1d(7*7*1024),
-            nn.ReLU(),
+        self.conv_transpose1 = nn.Sequential(
+            nn.ConvTranspose2d(
+                in_channels=input_dim,
+                out_channels=n_features * 8,
+                kernel_size=4,
+                stride=1,
+                padding=0,
+            ))
+        self.conv1 = nn.Conv2d(
+            in_channels=n_features * 8,
+            out_channels=n_features * 8,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.conv_transpose2 = nn.ConvTranspose2d(  # state size. (n_features*8) x 4 x 4
+                in_channels=n_features * 8,
+                out_channels=n_features * 4,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+            )
+        self.conv2 = nn.Conv2d(
+            in_channels=n_features * 4,
+            out_channels=n_features * 4,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.conv_transpose3 = nn.ConvTranspose2d( # state size. (n_features*4) x 8 x 8
+                in_channels=n_features * 4,
+                out_channels=n_features * 2,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+            )
+        self.conv3 = nn.Conv2d(
+            in_channels=n_features * 2,
+            out_channels=n_features * 2,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.conv_transpose4 = nn.Sequential(
+            # state size. (n_features*2) x 16 x 16
+            nn.ConvTranspose2d(
+                in_channels=n_features * 2,
+                out_channels=n_features,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+            ))
+        self.conv4 = nn.Conv2d(
+            in_channels=n_features,
+            out_channels=n_features,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.conv_transpose5 = nn.Sequential(
+            # state size. (n_features) x 32 x 32
+            nn.ConvTranspose2d(
+                in_channels=n_features,
+                out_channels=output_dim,
+                kernel_size=1,
+                stride=1,
+                padding=2,
+            )
+            # output size. 1 x 28 x 28
+        )
+        self.conv5 = nn.Conv2d(
+            in_channels=output_dim,
+            out_channels=output_dim,
+            kernel_size=3,
+            stride=1,
+            padding=1,
         )
 
-        self.l2 = nn.Sequential(
-            nn.ConvTranspose2d(1024, 512, 4, 2, 1),
-            # nn.BatchNorm2d(512),
-            nn.ReLU(),
-        )
+    def forward(self, x):
+        x.unsqueeze_(2)
+        x.unsqueeze_(3)
 
-        self.l3 = nn.Sequential(
-            nn.ConvTranspose2d(512, 256, 4, 2, 1),
-            # nn.BatchNorm2d(256),
-            nn.ReLU(),
-        )
-
-        self.l4 = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, 3, 1, 1),
-            # nn.BatchNorm2d(128),
-            nn.ReLU(),
-        )
-
-        self.l5 = nn.Sequential(
-            nn.ConvTranspose2d(128, 128, 3, 1, 1),
-            # nn.BatchNorm2d(128),
-            nn.ReLU(),
-        )
-
-        self.l6 = nn.Sequential(
-            nn.ConvTranspose2d(128, output_dim, 3, 1, 1, bias=False), nn.Sigmoid()
-        )
-
-    def forward(self, z):
-        x = self.l1(z)
-        x = self.l2(x.view(-1, 1024, 7, 7))
-        x = self.l3(x)
-        x = self.l4(x)
-        x = self.l5(x)
-        x = self.l6(x)
+        x = F.relu(self.conv1(self.conv_transpose1(x)) + self.conv_transpose1(x))
+        x = F.relu(self.conv2(self.conv_transpose2(x)) + self.conv_transpose2(x))
+        x = F.relu(self.conv3(self.conv_transpose3(x)) + self.conv_transpose3(x))
+        x = F.relu(self.conv4(self.conv_transpose4(x)) + self.conv_transpose4(x))
+        x = F.tanh(self.conv5(self.conv_transpose5(x)) + self.conv_transpose5(x))
+        
         return x.view(x.size(0), -1)
 
 
@@ -173,9 +224,7 @@ def make_model(name, input_dim, output_dim, hidden_layers=None):
         return MLPRelu(input_dim, hidden_layers, output_dim)
     elif name == "cnn":
         return CNN(input_dim, output_dim)
-    elif name == "recursive_cnn":
-        return RecursiveCNN(input_dim, output_dim)
-    elif name == "generator":
-        return Generator(input_dim, output_dim)
+    elif name == "res_cnn":
+        return ResCNN(input_dim, output_dim)
     else:
         raise ValueError(f"Unknown model name: {name}")
