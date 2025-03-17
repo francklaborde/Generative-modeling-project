@@ -108,57 +108,6 @@ class CNN(nn.Module):
         return x.view(x.size(0), -1)
 
 
-class RecursiveCNN(nn.Module):
-    def __init__(self, input_dim, output_dim, n_features=64):
-        super().__init__()
-        self.layer_dims = [
-            input_dim,
-            n_features * 8,
-            n_features * 4,
-            n_features * 2,
-            n_features,
-            output_dim,
-        ]
-        self.num_layers = len(self.layer_dims) - 1
-
-        self.weights = nn.ModuleList()
-        self.biases = nn.ParameterList()
-
-        for n in range(1, len(self.layer_dims)):
-            weight_n = nn.ModuleList()
-            for i in range(n):
-                conv = nn.ConvTranspose2d(
-                    in_channels=self.layer_dims[i],
-                    out_channels=self.layer_dims[n],
-                    kernel_size=4,
-                    stride=2 if i > 0 else 1,
-                    padding=1 if i > 0 else 0,
-                    bias=False,
-                )
-                nn.init.kaiming_normal_(conv.weight, mode="fan_in", nonlinearity="relu")
-                weight_n.append(conv)
-            self.weights.append(weight_n)
-
-            b_n = nn.Parameter(torch.zeros(1, self.layer_dims[n], 1, 1))
-            self.biases.append(b_n)
-
-    def forward(self, x):
-        x = x.view(x.size(0), -1, 1, 1)
-        h = [x]
-
-        for n in range(self.num_layers):
-            out = (
-                sum(W_ni(h_i) for W_ni, h_i in zip(self.weights[n], h)) + self.biases[n]
-            )
-
-            if n < self.num_layers - 1:
-                out = F.relu(out)
-
-            h.append(out)
-
-        return torch.tanh(h[-1]).view(h[-1].size(0), -1)
-
-
 class Generator(nn.Module):
     def __init__(self, d, output_dim=1):
         super(Generator, self).__init__()

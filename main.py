@@ -27,14 +27,21 @@ def parse_args():
         "--source_dataset",
         type=str,
         default="gaussian",
-        choices=["two_moons", "swiss_roll", "gaussian"],
+        choices=["two_moons", "swiss_roll", "gaussian", "discrete_points"],
         help="Name of the source dataset.",
     )
     parser.add_argument(
         "--target_dataset",
         type=str,
         default="two_moons",
-        choices=["two_moons", "swiss_roll", "gaussian", "fashion_mnist", "uniform"],
+        choices=[
+            "two_moons",
+            "swiss_roll",
+            "gaussian",
+            "fashion_mnist",
+            "uniform",
+            "discrete_points",
+        ],
         help="Name of the target dataset.",
     )
     parser.add_argument(
@@ -270,7 +277,7 @@ def main():
             "recursive_cnn",
             "generator",
         ], "Only CNN and generator models are supported for Fashion MNIST"
-        model = make_model(args.model, input_dim, output_dim)
+        model = make_model(args.model, input_dim, 1)
         mnist = True
     else:
         model = make_model("mlp", input_dim, output_dim, hidden_layers=hidden_layers)
