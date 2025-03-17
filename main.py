@@ -27,7 +27,7 @@ def parse_args():
         "--source_dataset",
         type=str,
         default="gaussian",
-        choices=["two_moons", "swiss_roll", "gaussian", "discrete_points"],
+        choices=["two_moons", "swiss_roll", "gaussian", "uniform", "discrete_points"],
         help="Name of the source dataset.",
     )
     parser.add_argument(
@@ -63,6 +63,18 @@ def parse_args():
         help="Mean of the target Gaussian distribution (applies to gaussian).",
     )
     parser.add_argument(
+        "--source_scale",
+        type=float,
+        default=1.0,
+        help="Scale of the source distribution.",
+    )
+    parser.add_argument(
+        "--target_scale",
+        type=float,
+        default=1.0,
+        help="Scale of the target distribution.",
+    )
+    parser.add_argument(
         "--dimension",
         type=int,
         default=2,
@@ -81,16 +93,16 @@ def parse_args():
         help="Noise level for the target dataset (if applicable).",
     )
     parser.add_argument(
-        "--uniform_low",
+        "--low",
         type=float,
         default=0.0,
-        help="Lower bound for the uniform distribution (applies to uniform).",
+        help="Lower bound for the uniform or discrete distribution.",
     )
     parser.add_argument(
-        "--uniform_high",
+        "--high",
         type=float,
         default=1.0,
-        help="Upper bound for the uniform distribution (applies to uniform).",
+        help="Upper bound for the uniform or discrete distribution.",
     )
     # Model hyperparameters
     parser.add_argument(
@@ -130,7 +142,7 @@ def parse_args():
     parser.add_argument(
         "--noise_scale",
         type=float,
-        default=0.01,
+        default=1,
         help="Scale of the noise for NoisedProjectedSGD.",
     )
     parser.add_argument(
@@ -221,10 +233,20 @@ def main():
             sigma=args.source_noise,
             dim=args.dimension,
         )
-
+    elif args.source_dataset == "uniform" or args.source_dataset == "discrete_points":
+        source_dataset = make_dataset(
+            args.source_dataset,
+            num_samples=args.num_points,
+            low=args.low,
+            high=args.high,
+            dim=args.dimension,
+        )
     else:
         source_dataset = make_dataset(
-            args.source_dataset, num_samples=args.num_points, noise=args.source_noise
+            args.source_dataset,
+            num_samples=args.num_points,
+            noise=args.source_noise,
+            scale=args.source_scale,
         )
 
     if args.target_dataset == "gaussian":
@@ -235,12 +257,12 @@ def main():
             sigma=args.target_noise,
             dim=args.dimension,
         )
-    elif args.source_dataset == "uniform":
+    elif args.source_dataset == "uniform" or args.source_dataset == "discrete_points":
         target_dataset = make_dataset(
             args.target_dataset,
             num_samples=args.num_points,
-            low=args.uniform_low,
-            high=args.uniform_high,
+            low=args.low,
+            high=args.high,
             dim=args.dimension,
         )
     elif args.target_dataset == "fashion_mnist":
@@ -249,7 +271,10 @@ def main():
         )
     else:
         target_dataset = make_dataset(
-            args.target_dataset, num_samples=args.num_points, noise=args.target_noise
+            args.target_dataset,
+            num_samples=args.num_points,
+            noise=args.target_noise,
+            scale=args.target_scale,
         )
 
     paired_dataset = PairedDataset(source_dataset, target_dataset)
