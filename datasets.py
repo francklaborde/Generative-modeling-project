@@ -131,25 +131,34 @@ class GaussianDataset(Dataset):
 
 class DiscretePointsDataset(Dataset):
     """
-    PyTorch Dataset for a set of discrete points.
+    PyTorch Dataset for a set of discrete points arranged in a multi-dimensional grid.
     """
 
     def __init__(self, num_samples, low=0.0, high=1.0, dim=2):
         """
         Args:
-            num_samples (int): Number of samples to generate.
-            low (float or array-like): Lower bound of the Uniform distribution.
-            high (float or array-like): Upper bound of the Uniform distribution.
-            dim (int): Dimensionality of the samples.
+            num_samples (int): Total number of points to generate (must be a perfect power of dim).
+            low (float): Lower bound of the grid.
+            high (float): Upper bound of the grid.
+            dim (int): Dimensionality of the grid.
         """
-        self.num_samples = num_samples
+        num_rows = int(num_samples ** (1 / dim))
+        if num_rows**dim != num_samples:
+            raise ValueError("num_samples must be a perfect power of dim.")
+
+        self.num_rows = num_rows
+        self.low = float(low)
+        self.high = float(high)
         self.dim = dim
 
-        X = np.random.uniform(low=low, high=high, size=(num_samples, dim))
-        self.data = torch.tensor(X, dtype=torch.float32)
+        axes = [np.linspace(self.low, self.high, num_rows) for _ in range(dim)]
+        grid = np.meshgrid(*axes, indexing="ij")
+        grid_points = np.vstack([axis.ravel() for axis in grid]).T
+
+        self.data = torch.tensor(grid_points, dtype=torch.float32)
 
     def __len__(self):
-        return self.num_samples
+        return self.num_rows**self.dim
 
     def __getitem__(self, idx):
         return self.data[idx]

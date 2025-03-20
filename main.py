@@ -48,7 +48,7 @@ def parse_args():
         "--num_points",
         type=int,
         default=1000,
-        help="Number of points in each of the training and validation datasets.",
+        help="Number of points in each of the training and validation datasets. Must be a power of input dimension for DiscretePointsDataset.",
     )
     parser.add_argument(
         "--source_mu",
@@ -279,7 +279,7 @@ def main():
 
     paired_dataset = PairedDataset(source_dataset, target_dataset)
 
-    train_loader = DataLoader(paired_dataset, batch_size=args.batch_size, shuffle=True)
+    train_loader = DataLoader(paired_dataset, batch_size=args.batch_size, shuffle=False)
     valid_loader = DataLoader(paired_dataset, batch_size=args.batch_size, shuffle=False)
 
     sample_source = source_dataset[0]
