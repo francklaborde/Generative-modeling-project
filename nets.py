@@ -4,7 +4,17 @@ import torch.nn.functional as F
 
 
 class MLPRelu(nn.Module):
+    """
+    Multi-layer perceptron with residual connections and ReLU activations.
+    """
+
     def __init__(self, d_in, hidden_layers, d_out):
+        """
+        Args:
+            d_in (int): Number of input features.
+            hidden_layers (list): List of hidden layer sizes.
+            d_out (int): Number of output features.
+        """
         super().__init__()
         self.layer_dims = [d_in] + hidden_layers + [d_out]
         self.num_layers = len(self.layer_dims) - 1
@@ -43,9 +53,12 @@ class MLPRelu(nn.Module):
 class CNN(nn.Module):
     def __init__(self, input_dim, output_dim, n_features=64):
         """
+        Generative model with a CNN architecture.
+
         Args:
             input_dim (int): Number of input features.
             output_dim (int): Number of output features.
+            n_features (int): Number of features in the penultimate layer.
         """
         super(CNN, self).__init__()
 
@@ -57,7 +70,6 @@ class CNN(nn.Module):
                 stride=1,
                 padding=0,
             ),
-            # nn.BatchNorm2d(n_features * 8),
             nn.ReLU(True),
             # state size. (n_features*8) x 4 x 4
             nn.ConvTranspose2d(
@@ -67,7 +79,6 @@ class CNN(nn.Module):
                 stride=2,
                 padding=1,
             ),
-            # nn.BatchNorm2d(n_features * 4),
             nn.ReLU(True),
             # state size. (n_features*4) x 8 x 8
             nn.ConvTranspose2d(
@@ -77,7 +88,6 @@ class CNN(nn.Module):
                 stride=2,
                 padding=1,
             ),
-            # nn.BatchNorm2d(n_features * 2),
             nn.ReLU(True),
             # state size. (n_features*2) x 16 x 16
             nn.ConvTranspose2d(
@@ -87,7 +97,6 @@ class CNN(nn.Module):
                 stride=2,
                 padding=1,
             ),
-            # nn.BatchNorm2d(n_features),
             nn.ReLU(True),
             # state size. (n_features) x 32 x 32
             nn.ConvTranspose2d(
@@ -109,11 +118,16 @@ class CNN(nn.Module):
 
 
 class ResCNN(nn.Module):
+    """
+    Generative model with a residual CNN architecture.
+    """
+
     def __init__(self, input_dim, output_dim, n_features=64):
         """
         Args:
             input_dim (int): Number of input features.
             output_dim (int): Number of output features.
+            n_features (int): Number of features in the penultimate layer.
         """
         super(ResCNN, self).__init__()
 
@@ -124,7 +138,8 @@ class ResCNN(nn.Module):
                 kernel_size=4,
                 stride=1,
                 padding=0,
-            ))
+            )
+        )
         self.conv1 = nn.Conv2d(
             in_channels=n_features * 8,
             out_channels=n_features * 8,
@@ -133,12 +148,12 @@ class ResCNN(nn.Module):
             padding=1,
         )
         self.conv_transpose2 = nn.ConvTranspose2d(  # state size. (n_features*8) x 4 x 4
-                in_channels=n_features * 8,
-                out_channels=n_features * 4,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-            )
+            in_channels=n_features * 8,
+            out_channels=n_features * 4,
+            kernel_size=4,
+            stride=2,
+            padding=1,
+        )
         self.conv2 = nn.Conv2d(
             in_channels=n_features * 4,
             out_channels=n_features * 4,
@@ -146,13 +161,13 @@ class ResCNN(nn.Module):
             stride=1,
             padding=1,
         )
-        self.conv_transpose3 = nn.ConvTranspose2d( # state size. (n_features*4) x 8 x 8
-                in_channels=n_features * 4,
-                out_channels=n_features * 2,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-            )
+        self.conv_transpose3 = nn.ConvTranspose2d(  # state size. (n_features*4) x 8 x 8
+            in_channels=n_features * 4,
+            out_channels=n_features * 2,
+            kernel_size=4,
+            stride=2,
+            padding=1,
+        )
         self.conv3 = nn.Conv2d(
             in_channels=n_features * 2,
             out_channels=n_features * 2,
@@ -168,7 +183,8 @@ class ResCNN(nn.Module):
                 kernel_size=4,
                 stride=2,
                 padding=1,
-            ))
+            )
+        )
         self.conv4 = nn.Conv2d(
             in_channels=n_features,
             out_channels=n_features,
@@ -204,7 +220,7 @@ class ResCNN(nn.Module):
         x = F.relu(self.conv3(self.conv_transpose3(x)) + self.conv_transpose3(x))
         x = F.relu(self.conv4(self.conv_transpose4(x)) + self.conv_transpose4(x))
         x = F.tanh(self.conv5(self.conv_transpose5(x)) + self.conv_transpose5(x))
-        
+
         return x.view(x.size(0), -1)
 
 
@@ -216,7 +232,7 @@ def make_model(name, input_dim, output_dim, hidden_layers=None):
         name (str): Name of the model. Options: "mlp", "cnn".
         input_dim (int): Number of input features.
         output_dim (int): Number of output features.
-        hidden_layers (list): List of hidden layer sizes (Require for "mlp").
+        hidden_layers (list): List of hidden layer sizes (Required for "mlp").
     """
 
     if name == "mlp":

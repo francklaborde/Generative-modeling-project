@@ -14,9 +14,6 @@ def train_one_epoch(
     criterion,
     optimizer,
     device,
-    epoch,
-    log_interval=10,
-    mnist=False,
 ):
     """
     Trains the model for one epoch.
@@ -27,12 +24,12 @@ def train_one_epoch(
         criterion (callable): Loss function (e.g., sliced Wasserstein loss).
         optimizer (torch.optim.Optimizer): Optimizer (e.g., SGD or its variants).
         device (torch.device): Device to run training on.
-        epoch (int): Current epoch number (used for display/logging).
-        log_interval (int): Number of batches between progress updates.
 
     Returns:
         avg_loss (float): Average training loss over the epoch.
         batch_losses (list): List of losses for each batch.
+        avg_KL (float): Average KL divergence over the epoch.
+        batch_KL (list): List of KL divergences for each batch.
     """
     model.train()
     running_loss = 0.0
@@ -69,9 +66,11 @@ def evaluate(model, valid_loader, criterion, device, mnist=False):
         valid_loader (torch.utils.data.DataLoader): Validation data loader.
         criterion (callable): Loss function.
         device (torch.device): Device to run evaluation on.
+        mnist (bool): Whether the dataset is MNIST (requires reshaping).
 
     Returns:
         avg_loss (float): Average validation loss.
+        avg_KL (float): Average KL divergence
     """
     model.eval()
     running_loss = 0.0
@@ -101,7 +100,6 @@ def train_model(
     optimizer,
     device,
     num_epochs=50,
-    log_interval=10,
     save_dir="checkpoints",
     save_model=False,
     scheduler_factor=0.5,
@@ -124,6 +122,12 @@ def train_model(
         num_epochs (int): Number of training epochs.
         log_interval (int): Number of batches between progress updates.
         save_dir (str): Directory where checkpoints and history will be saved.
+        save_model (bool): Whether to save the best model based on validation loss.
+        scheduler_factor (float): Factor by which to reduce learning rate on plateau.
+        scheduler_patience (int): Number of epochs with no improvement before reducing LR.
+        scheduler_min_lr (float): Minimum learning rate for scheduler.
+        mnist (bool): Whether the dataset is MNIST (requires reshaping).
+        use_notebook (bool): Whether to use tqdm notebook for progress bar.
 
     Returns:
         history (dict): Dictionary containing training and validation losses.
@@ -154,9 +158,6 @@ def train_model(
             criterion,
             optimizer,
             device,
-            epoch,
-            log_interval,
-            mnist=mnist,
         )
         valid_loss, valid_kl = evaluate(
             model, valid_loader, criterion, device, mnist=mnist
