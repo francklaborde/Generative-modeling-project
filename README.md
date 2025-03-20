@@ -3,6 +3,8 @@
 Implementation of the paper [Convergence of SGD for Training Neural Networks with Sliced Wasserstein Losses](https://arxiv.org/abs/2307.11714)
 on the generation of simple 2D distributions and FashionMNIST images.
 
+![Example generated samples](generated_samples.png)
+
 ## Usage
 
 First install dependencies, for example with pyenv and poetry:
