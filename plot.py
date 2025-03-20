@@ -92,8 +92,11 @@ def plot_distributions(
             generated = generated.view(-1, 28, 28)
         generated = generated[:100].cpu().detach().numpy()
         for i, ax in enumerate(axes.flat):
-            ax.imshow(generated[i].squeeze(), cmap="gray")
-            ax.axis("off")
+            try:
+                ax.imshow(generated[i].squeeze(), cmap="gray")
+                ax.axis("off")
+            except IndexError:
+                break
         plt.suptitle(title, fontsize=16)
         if filename:
             plt.savefig(filename, dpi=300, bbox_inches="tight")
