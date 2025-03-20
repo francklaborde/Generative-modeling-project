@@ -1,9 +1,10 @@
 [project]
 name = "sgdslicedwasserstein"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
 authors = [
-    {name = "killian31",email = "80256683+killian31@users.noreply.github.com"}
+    {name = "killian31"},
+    {name="francklaborde"}
 ]
 readme = "README.md"
 requires-python = ">=3.12"
@@ -21,3 +22,6 @@ dependencies = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+package-mode = false

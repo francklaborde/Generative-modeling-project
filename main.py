@@ -146,12 +146,6 @@ def parse_args():
         help="Scale of the noise for NoisedProjectedSGD.",
     )
     parser.add_argument(
-        "--log_interval",
-        type=int,
-        default=10,
-        help="Interval (in batches) at which to log training progress.",
-    )
-    parser.add_argument(
         "--save_dir",
         type=str,
         default="checkpoints",
@@ -339,7 +333,6 @@ def main():
         optimizer,
         device,
         num_epochs=args.epochs,
-        log_interval=args.log_interval,
         save_dir=args.save_dir,
         save_model=args.save_model,
         scheduler_factor=args.scheduler_factor,

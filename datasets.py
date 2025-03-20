@@ -185,11 +185,9 @@ class FashionMNISTDataset(Dataset):
         Args:
             num_samples (int): Number of samples to generate.
             data_path (str): Path to the Fashion MNIST dataset.
-            transform (callable): Optional transform to apply to the samples. If not provided, the samples are converted to tensors and normalized.
         """
         self.num_samples = num_samples
 
-        # Load Fashion MNIST dataset using torchvision.
         transform = torchvision.transforms.Compose(
             [
                 torchvision.transforms.ToTensor(),
@@ -268,7 +266,16 @@ def make_dataset(name, num_samples=1000, **kwargs):
 
 
 class PairedDataset(torch.utils.data.Dataset):
+    """
+    PyTorch Dataset for paired data.
+    """
+
     def __init__(self, source_dataset, target_dataset):
+        """
+        Args:
+            source_dataset (torch.utils.data.Dataset): Source dataset.
+            target_dataset (torch.utils.data.Dataset): Target dataset.
+        """
         assert len(source_dataset) == len(
             target_dataset
         ), "Source and target datasets must have the same number of points"
